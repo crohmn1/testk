@@ -5,83 +5,149 @@ import { CartItem } from '../types';
 interface CartProps {
   items: CartItem[];
   onUpdateQuantity: (id: string, delta: number) => void;
+  onSetQuantity: (id: string, value: number) => void;
   onRemove: (id: string) => void;
   onCheckout: (discount: number) => void;
   onReset: () => void;
 }
 
-const Cart: React.FC<CartProps> = ({ items, onUpdateQuantity, onRemove, onCheckout, onReset }) => {
-  const [discount, setDiscount] = useState(0);
+const Cart: React.FC<CartProps> = ({ items, onUpdateQuantity, onSetQuantity, onRemove, onCheckout, onReset }) => {
+  const [discountPercent, setDiscountPercent] = useState(0);
   
   const subtotal = items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-  const total = Math.max(0, subtotal - discount);
+  const discountAmount = (subtotal * discountPercent) / 100;
+  const total = Math.max(0, subtotal - discountAmount);
+
+  const handleCheckout = () => {
+    onCheckout(discountAmount);
+  };
 
   return (
     <div className="bg-white rounded-2xl shadow-lg border h-full flex flex-col overflow-hidden max-h-[85vh]">
-      <div className="p-4 bg-gray-50 border-b flex justify-between items-center">
+      <div className="p-4 bg-gray-50 border-b flex justify-between items-center shrink-0">
         <h2 className="text-xl font-bold text-gray-800 flex items-center gap-2">
           <i className="fas fa-shopping-basket text-blue-600"></i> Keranjang
         </h2>
-        <button onClick={onReset} className="text-xs text-red-500 hover:underline">Reset</button>
+        {items.length > 0 && (
+          <button 
+            onClick={onReset} 
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider text-red-500 bg-red-50 hover:bg-red-100 transition active:scale-95 border border-red-100"
+          >
+            <i className="fas fa-trash-alt"></i> Kosongkan
+          </button>
+        )}
       </div>
 
-      <div className="flex-1 overflow-y-auto p-4 space-y-4">
+      <div className="flex-1 overflow-y-auto p-4 space-y-3">
         {items.length === 0 ? (
-          <div className="h-full flex flex-col items-center justify-center text-gray-400 py-10">
-            <i className="fas fa-box-open text-4xl mb-4"></i>
-            <p>Belum ada item</p>
+          <div className="flex flex-col items-center justify-center text-gray-300 h-[44px] border border-dashed border-gray-100 rounded-xl">
+            <p className="text-[9px] font-black uppercase tracking-widest flex items-center gap-2 opacity-60">
+              <i className="fas fa-box-open text-xs"></i> Keranjang Kosong
+            </p>
           </div>
         ) : (
           items.map(item => (
-            <div key={item.id} className="flex gap-3 pb-4 border-b">
-              <div className="flex-1">
-                <h4 className="font-semibold text-gray-800 line-clamp-1">{item.name}</h4>
-                <p className="text-blue-600 font-bold">Rp {item.price.toLocaleString()}</p>
+            <div key={item.id} className="flex items-center gap-4 pb-3 border-b border-gray-50 last:border-0 group">
+              <div className="flex-1 min-w-0">
+                <h4 className="font-bold text-gray-800 truncate text-xs md:text-sm leading-tight">{item.name}</h4>
+                <p className="text-blue-600 font-black text-[10px] md:text-xs mt-0.5">Rp{item.price.toLocaleString('id-ID')}</p>
               </div>
-              <div className="flex items-center gap-2 bg-gray-100 rounded-lg p-1">
-                <button onClick={() => onUpdateQuantity(item.id, -1)} className="w-8 h-8 flex items-center justify-center hover:bg-white rounded transition">
-                  <i className="fas fa-minus text-xs"></i>
+              
+              <div className="flex items-center gap-0.5 bg-gray-50 rounded-xl p-0.5 h-fit shrink-0 border border-gray-100 ml-auto">
+                <button 
+                  onClick={() => onUpdateQuantity(item.id, -1)} 
+                  className="w-7 h-7 flex items-center justify-center hover:bg-white hover:shadow-sm rounded-lg transition text-gray-400 hover:text-red-500"
+                >
+                  <i className="fas fa-minus text-[8px]"></i>
                 </button>
-                <span className="w-6 text-center font-bold">{item.quantity}</span>
-                <button onClick={() => onUpdateQuantity(item.id, 1)} className="w-8 h-8 flex items-center justify-center hover:bg-white rounded transition">
-                  <i className="fas fa-plus text-xs"></i>
+                
+                <input 
+                  type="number"
+                  inputMode="numeric"
+                  className="w-8 bg-transparent text-center font-black text-xs md:text-sm focus:outline-none text-gray-700"
+                  value={item.quantity}
+                  onChange={(e) => {
+                    const val = parseInt(e.target.value);
+                    if (!isNaN(val) && val >= 0) {
+                      onSetQuantity(item.id, val);
+                    } else if (e.target.value === '') {
+                      onSetQuantity(item.id, 0);
+                    }
+                  }}
+                  onBlur={(e) => {
+                    if (e.target.value === '' || parseInt(e.target.value) === 0) {
+                      onSetQuantity(item.id, 1);
+                    }
+                  }}
+                />
+                
+                <button 
+                  onClick={() => onUpdateQuantity(item.id, 1)} 
+                  className="w-7 h-7 flex items-center justify-center hover:bg-white hover:shadow-sm rounded-lg transition text-gray-400 hover:text-blue-600"
+                >
+                  <i className="fas fa-plus text-[8px]"></i>
                 </button>
               </div>
-              <button onClick={() => onRemove(item.id)} className="text-gray-300 hover:text-red-500 transition px-2">
-                <i className="fas fa-trash-alt"></i>
+
+              <button 
+                onClick={() => onRemove(item.id)} 
+                className="text-gray-300 hover:text-red-500 transition pl-1 pr-0 shrink-0"
+                title="Hapus"
+              >
+                <i className="fas fa-times-circle text-base"></i>
               </button>
             </div>
           ))
         )}
       </div>
 
-      <div className="p-4 bg-gray-50 border-t space-y-3">
-        <div className="flex justify-between text-gray-600 text-sm">
-          <span>Subtotal</span>
-          <span>Rp {subtotal.toLocaleString()}</span>
-        </div>
-        <div className="flex items-center justify-between gap-4">
-          <span className="text-sm text-gray-600">Diskon</span>
-          <div className="relative w-32">
-            <span className="absolute left-2 top-2 text-xs text-gray-400">Rp</span>
-            <input 
-              type="number" 
-              className="w-full pl-8 pr-2 py-1 border rounded text-right text-sm"
-              value={discount}
-              onChange={(e) => setDiscount(Number(e.target.value))}
-            />
+      <div className="p-4 bg-white border-t border-gray-100 space-y-4 shadow-[0_-4px_10px_rgba(0,0,0,0.02)] shrink-0">
+        <div className="space-y-2">
+          <div className="flex justify-between text-gray-400 text-[10px] font-bold uppercase tracking-wider">
+            <span>Subtotal</span>
+            <span>Rp {subtotal.toLocaleString()}</span>
           </div>
+          
+          <div className="flex items-center justify-between gap-4">
+            <span className="text-[10px] font-bold uppercase tracking-wider text-gray-400">Potongan/Diskon (%)</span>
+            <div className="relative w-24">
+              <input 
+                type="number" 
+                inputMode="numeric"
+                placeholder="0"
+                max="100"
+                min="0"
+                className="w-full px-3 py-1.5 bg-gray-50 border border-gray-100 rounded-lg text-right text-xs font-black text-red-500 focus:ring-2 focus:ring-red-100 focus:outline-none transition pr-7"
+                value={discountPercent || ''}
+                onChange={(e) => {
+                  const val = Number(e.target.value);
+                  if (val >= 0 && val <= 100) setDiscountPercent(val);
+                }}
+              />
+              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-black text-red-400 pointer-events-none">%</span>
+            </div>
+          </div>
+
+          {discountAmount > 0 && (
+            <div className="flex justify-between text-red-400 text-[10px] font-medium italic">
+              <span>Nilai Diskon</span>
+              <span>- Rp {discountAmount.toLocaleString()}</span>
+            </div>
+          )}
         </div>
-        <div className="pt-2 border-t flex justify-between items-center">
-          <span className="font-bold text-gray-800">Total</span>
+
+        <div className="pt-3 border-t border-dashed border-gray-200 flex justify-between items-center">
+          <span className="font-black text-gray-800 text-sm uppercase tracking-tighter">Total Bayar</span>
           <span className="text-2xl font-black text-blue-700">Rp {total.toLocaleString()}</span>
         </div>
+
         <button 
           disabled={items.length === 0}
-          onClick={() => onCheckout(discount)}
-          className="w-full bg-blue-600 text-white py-4 rounded-xl font-bold text-lg hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3"
+          onClick={handleCheckout}
+          className="w-full bg-blue-600 text-white py-4 rounded-2xl font-black text-lg hover:bg-blue-700 shadow-lg shadow-blue-100 transition disabled:opacity-30 disabled:grayscale disabled:cursor-not-allowed flex items-center justify-center gap-3 active:scale-95"
         >
-          <i className="fas fa-print"></i> Bayar & Cetak
+          <i className="fas fa-print"></i> 
+          <span>SELESAI & CETAK</span>
         </button>
       </div>
     </div>

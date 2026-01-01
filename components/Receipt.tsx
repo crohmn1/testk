@@ -13,6 +13,9 @@ const Receipt: React.FC<ReceiptProps> = ({ order }) => {
     year: 'numeric'
   });
 
+  const subtotal = order.total_amount + order.discount;
+  const discountPercent = subtotal > 0 ? Math.round((order.discount / subtotal) * 100) : 0;
+
   return (
     <div className="text-gray-800 font-mono text-sm leading-tight p-2" id="print-section">
       <div className="text-center mb-6">
@@ -61,11 +64,11 @@ const Receipt: React.FC<ReceiptProps> = ({ order }) => {
       <div className="border-t border-dashed pt-3 space-y-1">
         <div className="flex justify-between">
           <span>Subtotal</span>
-          <span>Rp {(order.total_amount + order.discount).toLocaleString()}</span>
+          <span>Rp {subtotal.toLocaleString()}</span>
         </div>
         {order.discount > 0 && (
           <div className="flex justify-between text-red-600">
-            <span>Diskon</span>
+            <span>Diskon ({discountPercent}%)</span>
             <span>- Rp {order.discount.toLocaleString()}</span>
           </div>
         )}

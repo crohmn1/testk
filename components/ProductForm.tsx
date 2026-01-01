@@ -55,9 +55,14 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onClose, onSave }) =
           <input 
             required
             type="number" 
+            inputMode="numeric"
             className="w-full border p-2 rounded-lg"
-            value={formData.price}
-            onChange={e => setFormData({ ...formData, price: Number(e.target.value) })}
+            value={formData.price === 0 ? '' : formData.price}
+            placeholder="0"
+            onChange={e => {
+              const val = e.target.value === '' ? 0 : Number(e.target.value);
+              setFormData({ ...formData, price: val });
+            }}
           />
         </div>
         <div>
@@ -65,16 +70,21 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onClose, onSave }) =
           <input 
             required
             type="number" 
+            inputMode="numeric"
             className="w-full border p-2 rounded-lg"
-            value={formData.stock}
-            onChange={e => setFormData({ ...formData, stock: Number(e.target.value) })}
+            value={formData.stock === 0 ? '' : formData.stock}
+            placeholder="0"
+            onChange={e => {
+              const val = e.target.value === '' ? 0 : Number(e.target.value);
+              setFormData({ ...formData, stock: val });
+            }}
           />
         </div>
       </div>
 
       <div className="flex gap-3 pt-4">
-        <button type="button" onClick={onClose} className="flex-1 px-4 py-2 border rounded-lg hover:bg-gray-50">Batal</button>
-        <button type="submit" className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-bold">Simpan</button>
+        <button type="button" onClick={onClose} className="flex-1 px-4 py-2 border rounded-lg hover:bg-gray-50 transition">Batal</button>
+        <button type="submit" className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-bold transition shadow-lg shadow-blue-100">Simpan</button>
       </div>
     </form>
   );

@@ -17,10 +17,10 @@ export const INITIAL_PRODUCTS: Product[] = [
 ];
 
 export const INITIAL_USERS: User[] = [
-  { id: 'admin-1', name: 'System Admin', pin: '1234', role: Role.ADMIN },
-  { id: 'cashier-1', name: 'Ani Kasir', pin: '0000', role: Role.KASIR },
-  { id: 'sales-1', name: 'Budi Sales', pin: '1111', role: Role.SALES },
-  { id: 'gudang-1', name: 'Gudang Master', pin: '2222', role: Role.GUDANG },
+  { id: 'admin-1', name: 'System Admin', pin: '12345', role: Role.ADMIN },
+  { id: 'cashier-1', name: 'Ani Kasir', pin: '00000', role: Role.KASIR },
+  { id: 'sales-1', name: 'Budi Sales', pin: '11111', role: Role.SALES },
+  { id: 'gudang-1', name: 'Gudang Master', pin: '22222', role: Role.GUDANG },
 ];
 
 export const APP_CONFIG = {

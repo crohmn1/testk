@@ -14,6 +14,7 @@ const Catalog: React.FC<CatalogProps> = ({ products, onAddToCart, user }) => {
   const [category, setCategory] = useState('Semua');
   const [sortStock, setSortStock] = useState<'none' | 'asc' | 'desc'>('none');
   const [page, setPage] = useState(1);
+  const [viewingProductName, setViewingProductName] = useState<string | null>(null);
 
   const categories = useMemo(() => {
     const cats = new Set(products.map(p => p.category));
@@ -39,26 +40,25 @@ const Catalog: React.FC<CatalogProps> = ({ products, onAddToCart, user }) => {
 
   const totalPages = Math.ceil(filtered.length / APP_CONFIG.PAGE_SIZE);
 
-  // Helper to check if button should be disabled
   const isButtonDisabled = !user || user.role === Role.GUDANG;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 md:space-y-6">
       {/* Search and Filters */}
-      <div className="bg-white p-4 rounded-xl shadow-sm border flex flex-col md:flex-row gap-4 items-center">
+      <div className="bg-white p-3 md:p-4 rounded-xl shadow-sm border flex flex-col md:flex-row gap-3 items-center">
         <div className="relative flex-1 w-full">
-          <i className="fas fa-search absolute left-3 top-3 text-gray-400"></i>
+          <i className="fas fa-search absolute left-3 top-2.5 text-gray-400 text-sm"></i>
           <input 
             type="text" 
             placeholder="Cari produk..." 
-            className="w-full pl-10 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full pl-9 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
             value={search}
             onChange={(e) => { setSearch(e.target.value); setPage(1); }}
           />
         </div>
         <div className="flex gap-2 w-full md:w-auto">
           <select 
-            className="flex-1 md:flex-none bg-gray-50 border border-gray-200 rounded-lg px-4 py-2 focus:outline-none"
+            className="flex-1 md:flex-none bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 focus:outline-none text-sm"
             value={category}
             onChange={(e) => { setCategory(e.target.value); setPage(1); }}
           >
@@ -69,7 +69,7 @@ const Catalog: React.FC<CatalogProps> = ({ products, onAddToCart, user }) => {
               setSortStock(prev => prev === 'none' ? 'asc' : prev === 'asc' ? 'desc' : 'none');
               setPage(1);
             }}
-            className={`flex-1 md:flex-none px-4 py-2 rounded-lg border flex items-center justify-center gap-2 transition ${sortStock !== 'none' ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-gray-600 border-gray-200'}`}
+            className={`flex-1 md:flex-none px-3 py-2 rounded-lg border flex items-center justify-center gap-2 transition text-sm ${sortStock !== 'none' ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-gray-600 border-gray-200'}`}
           >
             <i className="fas fa-layer-group"></i> 
             Stok {sortStock === 'asc' ? '↑' : sortStock === 'desc' ? '↓' : ''}
@@ -78,93 +78,111 @@ const Catalog: React.FC<CatalogProps> = ({ products, onAddToCart, user }) => {
       </div>
 
       {/* Product List */}
-      <div className="space-y-3">
+      <div className="bg-white rounded-xl border shadow-sm divide-y">
         {paginated.length > 0 ? (
           paginated.map(p => (
             <div 
               key={p.id} 
-              className="bg-white border rounded-xl overflow-hidden shadow-sm hover:shadow-md transition p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4"
+              className="p-3 md:p-4 flex items-center justify-between hover:bg-gray-50 transition gap-3"
             >
-              <div className="flex-1">
-                <div className="flex items-center gap-2 mb-1">
-                  <span className="text-[10px] bg-blue-50 text-blue-600 px-2 py-0.5 rounded font-bold uppercase">
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 mb-0.5">
+                  <span className="text-[9px] bg-blue-50 text-blue-600 px-1.5 py-0.5 rounded font-bold uppercase tracking-tight">
                     {p.category}
                   </span>
-                  {p.stock <= 5 && p.stock > 0 && (
-                    <span className="bg-red-500 text-white text-[10px] px-2 py-0.5 rounded font-bold">
-                      Stok Tipis
-                    </span>
-                  )}
                   {p.stock <= 0 && (
-                    <span className="bg-gray-500 text-white text-[10px] px-2 py-0.5 rounded font-bold">
+                    <span className="bg-gray-200 text-gray-500 text-[9px] px-1.5 py-0.5 rounded font-bold">
                       Habis
                     </span>
                   )}
                 </div>
-                <h3 className="font-bold text-gray-800 text-lg leading-tight">{p.name}</h3>
-                <p className="text-gray-400 text-xs mt-1">Stok tersedia: <span className="font-semibold text-gray-600">{p.stock}</span></p>
+                <h3 
+                  onClick={() => setViewingProductName(p.name)}
+                  className="font-bold text-gray-800 text-sm md:text-base truncate leading-tight cursor-help hover:text-blue-600 transition"
+                >
+                  {p.name}
+                </h3>
+                <div className="flex items-center gap-2 mt-1">
+                  <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-md ${
+                    p.stock <= 0 ? 'bg-red-50 text-red-400' : 
+                    p.stock <= 5 ? 'bg-orange-50 text-orange-500' : 
+                    'bg-green-50 text-green-600'
+                  }`}>
+                    Stok: {p.stock}
+                  </span>
+                </div>
               </div>
 
-              <div className="flex items-center justify-between sm:justify-end gap-6 sm:min-w-[200px]">
-                <p className="text-blue-700 font-black text-xl">
-                  Rp {p.price.toLocaleString()}
+              <div className="w-24 sm:w-32 text-right shrink-0">
+                <p className="text-blue-700 font-black text-sm md:text-lg whitespace-nowrap">
+                  Rp{p.price.toLocaleString('id-ID')}
                 </p>
+              </div>
+
+              <div className="shrink-0 ml-1">
                 <button 
                   disabled={isButtonDisabled || p.stock <= 0}
                   onClick={() => onAddToCart(p)}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-lg font-bold transition h-11 ${
-                    isButtonDisabled ? 'bg-gray-100 text-gray-300 cursor-not-allowed opacity-60' :
+                  className={`flex items-center justify-center rounded-lg font-bold transition ${
+                    isButtonDisabled ? 'bg-gray-100 text-gray-300 cursor-not-allowed' :
                     p.stock <= 0 ? 'bg-gray-100 text-gray-400 cursor-not-allowed' : 
-                    'bg-blue-600 text-white hover:bg-blue-700 active:scale-95'
-                  }`}
-                  title={user?.role === Role.GUDANG ? "Role Gudang tidak memiliki akses transaksi" : ""}
+                    'bg-blue-600 text-white hover:bg-blue-700 active:scale-90 shadow-sm'
+                  } w-9 h-9 md:w-auto md:h-10 md:px-4`}
                 >
-                  <i className="fas fa-cart-plus"></i>
-                  <span className="hidden sm:inline text-sm">Tambah</span>
+                  <i className="fas fa-plus text-sm"></i>
+                  <span className="hidden md:inline ml-2 text-sm">Tambah</span>
                 </button>
               </div>
             </div>
           ))
         ) : (
-          <div className="bg-white border rounded-xl p-12 text-center text-gray-400">
-            <i className="fas fa-search text-4xl mb-3 block"></i>
-            <p>Produk tidak ditemukan</p>
+          <div className="p-12 text-center text-gray-400">
+            <i className="fas fa-search text-3xl mb-2 block"></i>
+            <p className="text-sm font-medium">Produk tidak ditemukan</p>
           </div>
         )}
       </div>
 
       {/* Pagination */}
       {totalPages > 1 && (
-        <div className="flex justify-center items-center gap-4 mt-8 pb-10">
+        <div className="flex justify-center items-center gap-2 mt-4 pb-8">
           <button 
             disabled={page === 1}
             onClick={() => setPage(p => p - 1)}
-            className="p-2 w-10 h-10 rounded-full border border-gray-200 flex items-center justify-center disabled:opacity-30 hover:bg-white transition"
+            className="w-9 h-9 rounded-lg border border-gray-200 flex items-center justify-center disabled:opacity-20 hover:bg-white transition"
           >
-            <i className="fas fa-chevron-left text-sm"></i>
+            <i className="fas fa-chevron-left text-xs"></i>
           </button>
-          <div className="flex items-center gap-1">
-            {Array.from({ length: totalPages }, (_, i) => i + 1).map(pageNum => (
-              <button
-                key={pageNum}
-                onClick={() => setPage(pageNum)}
-                className={`w-8 h-8 rounded-lg text-sm font-bold transition ${
-                  page === pageNum 
-                  ? 'bg-blue-600 text-white' 
-                  : 'text-gray-500 hover:bg-gray-100'
-                }`}
-              >
-                {pageNum}
-              </button>
-            ))}
+          
+          <div className="flex items-center gap-1 bg-white border border-gray-200 rounded-lg px-2 py-1">
+             <span className="text-xs font-bold text-gray-400 px-1">{page}</span>
+             <span className="text-xs text-gray-300">/</span>
+             <span className="text-xs font-bold text-gray-600 px-1">{totalPages}</span>
           </div>
+
           <button 
             disabled={page === totalPages}
             onClick={() => setPage(p => p + 1)}
-            className="p-2 w-10 h-10 rounded-full border border-gray-200 flex items-center justify-center disabled:opacity-30 hover:bg-white transition"
+            className="w-9 h-9 rounded-lg border border-gray-200 flex items-center justify-center disabled:opacity-20 hover:bg-white transition"
           >
-            <i className="fas fa-chevron-right text-sm"></i>
+            <i className="fas fa-chevron-right text-xs"></i>
           </button>
+        </div>
+      )}
+
+      {/* Name Viewer Popup */}
+      {viewingProductName && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-white p-6 rounded-2xl shadow-2xl max-w-sm w-full animate-in zoom-in duration-200">
+            <h4 className="text-xs font-bold text-gray-400 uppercase mb-2">Nama Produk Lengkap:</h4>
+            <p className="text-xl font-bold text-gray-800 leading-tight mb-6">{viewingProductName}</p>
+            <button 
+              onClick={() => setViewingProductName(null)}
+              className="w-full bg-gray-100 hover:bg-gray-200 text-gray-800 py-3 rounded-xl font-bold transition active:scale-95"
+            >
+              Tutup
+            </button>
+          </div>
         </div>
       )}
     </div>

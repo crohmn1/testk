@@ -45,7 +45,6 @@ const App: React.FC = () => {
   };
 
   const addToCart = (product: Product) => {
-    // Only Kasir, Sales, and Admin can add to cart. Gudang cannot.
     if (!user || user.role === Role.GUDANG) return;
     setCart(prev => {
       const existing = prev.find(item => item.id === product.id);
@@ -64,6 +63,12 @@ const App: React.FC = () => {
       }
       return item;
     }));
+  };
+
+  const setManualQuantity = (id: string, value: number) => {
+    setCart(prev => prev.map(item => 
+      item.id === id ? { ...item, quantity: value } : item
+    ));
   };
 
   const removeFromCart = (id: string) => {
@@ -100,22 +105,21 @@ const App: React.FC = () => {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-screen bg-blue-50">
-        <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-blue-600"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-600"></div>
       </div>
     );
   }
 
-  // Determine if the current user can see the cart
   const canUseCart = user && user.role !== Role.GUDANG;
 
   return (
     <div className="min-h-screen flex flex-col bg-gray-50 pb-20 md:pb-0">
       {/* Header */}
-      <header className="bg-white border-b sticky top-0 z-40 px-4 py-3 shadow-sm">
+      <header className="bg-white border-b sticky top-0 z-40 px-3 py-2.5 md:px-4 md:py-3 shadow-sm">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <h1 className="text-xl md:text-2xl font-black text-blue-700 flex items-center gap-2 tracking-tight">
-              <i className="fas fa-cash-register"></i> <span className="hidden sm:inline">SmartPOS</span>
+          <div className="flex items-center gap-3">
+            <h1 className="text-lg md:text-2xl font-black text-blue-700 flex items-center gap-2 tracking-tight">
+              <i className="fas fa-cash-register"></i> <span>SmartPOS</span>
             </h1>
             
             {/* Desktop Navigation */}
@@ -149,23 +153,22 @@ const App: React.FC = () => {
             {!user ? (
               <button 
                 onClick={() => (document.getElementById('login-modal') as any).showModal()}
-                className="bg-blue-600 text-white px-6 py-2 rounded-full font-bold hover:bg-blue-700 shadow-lg shadow-blue-200 transition-all active:scale-95 flex items-center gap-2"
+                className="bg-blue-600 text-white px-4 py-1.5 md:px-6 md:py-2 rounded-full font-bold hover:bg-blue-700 shadow-lg shadow-blue-200 transition-all active:scale-95 flex items-center gap-2 text-sm"
               >
-                <i className="fas fa-lock text-xs"></i> Login PIN
+                <i className="fas fa-lock text-xs"></i> Login
               </button>
             ) : (
               <div className="flex items-center gap-2 md:gap-4">
                 <div className="text-right flex flex-col items-end">
-                  <p className="font-bold text-gray-800 text-sm leading-tight">{user.name}</p>
-                  <p className="text-[10px] bg-blue-50 text-blue-600 px-1.5 py-0.5 rounded font-bold uppercase tracking-wider">{user.role}</p>
+                  <p className="font-bold text-gray-800 text-xs md:text-sm leading-tight">{user.name.split(' ')[0]}</p>
+                  <p className="text-[8px] md:text-[10px] bg-blue-50 text-blue-600 px-1.5 py-0.5 rounded font-bold uppercase tracking-wider">{user.role}</p>
                 </div>
                 <button 
                   onClick={handleLogout}
-                  className="flex items-center gap-2 text-red-600 bg-red-50 px-3 py-2 rounded-lg hover:bg-red-100 transition font-bold text-xs"
+                  className="text-red-600 bg-red-50 p-2 md:px-3 md:py-2 rounded-lg hover:bg-red-100 transition font-bold text-xs"
                   title="Logout"
                 >
                   <i className="fas fa-sign-out-alt"></i>
-                  <span className="hidden sm:inline">Keluar</span>
                 </button>
               </div>
             )}
@@ -174,18 +177,19 @@ const App: React.FC = () => {
       </header>
 
       {/* Main Content */}
-      <main className="flex-1 overflow-auto p-4 md:p-6">
+      <main className="flex-1 overflow-auto p-3 md:p-6">
         <div className="max-w-7xl mx-auto">
           {view === 'catalog' && (
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-              <div className={canUseCart ? 'lg:col-span-8' : 'lg:col-span-12'}>
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 md:gap-6">
+              <div className={canUseCart ? 'lg:col-span-8 order-2 lg:order-1' : 'lg:col-span-12'}>
                 <Catalog products={products} onAddToCart={addToCart} user={user} />
               </div>
               {canUseCart && (
-                <div className="lg:col-span-4 sticky top-24 h-fit">
+                <div className="lg:col-span-4 lg:sticky lg:top-24 h-fit order-1 lg:order-2">
                   <Cart 
                     items={cart} 
                     onUpdateQuantity={updateCartQuantity} 
+                    onSetQuantity={setManualQuantity}
                     onRemove={removeFromCart} 
                     onCheckout={handleCheckout}
                     onReset={() => setCart([])}
@@ -209,28 +213,28 @@ const App: React.FC = () => {
 
       {/* Mobile Navigation Bar */}
       {user && (
-        <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 px-6 py-3 flex justify-between items-center z-50 shadow-[0_-4px_10px_rgba(0,0,0,0.05)]">
+        <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 px-8 py-3 flex justify-between items-center z-50 shadow-[0_-4px_10px_rgba(0,0,0,0.05)]">
           <button 
             onClick={() => setView('catalog')}
             className={`flex flex-col items-center gap-1 ${view === 'catalog' ? 'text-blue-600' : 'text-gray-400'}`}
           >
-            <i className="fas fa-th-large text-xl"></i>
-            <span className="text-[10px] font-bold">Katalog</span>
+            <i className="fas fa-th-large text-lg"></i>
+            <span className="text-[9px] font-bold">Katalog</span>
           </button>
           <button 
             onClick={() => setView('history')}
             className={`flex flex-col items-center gap-1 ${view === 'history' ? 'text-blue-600' : 'text-gray-400'}`}
           >
-            <i className="fas fa-history text-xl"></i>
-            <span className="text-[10px] font-bold">Riwayat</span>
+            <i className="fas fa-history text-lg"></i>
+            <span className="text-[9px] font-bold">Riwayat</span>
           </button>
           {user.role === Role.ADMIN && (
             <button 
               onClick={() => setView('admin')}
               className={`flex flex-col items-center gap-1 ${view === 'admin' ? 'text-blue-600' : 'text-gray-400'}`}
             >
-              <i className="fas fa-cog text-xl"></i>
-              <span className="text-[10px] font-bold">Manajemen</span>
+              <i className="fas fa-cog text-lg"></i>
+              <span className="text-[9px] font-bold">Menu</span>
             </button>
           )}
         </div>
@@ -238,26 +242,28 @@ const App: React.FC = () => {
 
       {/* Login Modal */}
       <dialog id="login-modal" className="modal p-0 rounded-2xl shadow-2xl backdrop:bg-black/60">
-        <div className="w-[350px]">
+        <div className="w-[320px] md:w-[350px]">
           <PinLogin onLogin={handleLogin} onCancel={() => (document.getElementById('login-modal') as any).close()} />
         </div>
       </dialog>
 
-      {/* Receipt & Hidden Print Section */}
+      {/* Receipt Modal */}
       {showReceipt && (
-        <div className="fixed inset-0 z-50 bg-black/70 flex items-center justify-center p-4">
-          <div className="bg-white rounded-xl max-w-sm w-full p-6 shadow-2xl animate-in zoom-in duration-200">
-            <Receipt order={showReceipt} />
-            <div className="mt-6 flex gap-3 no-print">
+        <div className="fixed inset-0 z-50 bg-black/70 flex items-center justify-center p-3">
+          <div className="bg-white rounded-xl max-w-[340px] w-full p-5 shadow-2xl animate-in zoom-in duration-200">
+            <div className="max-h-[70vh] overflow-y-auto">
+              <Receipt order={showReceipt} />
+            </div>
+            <div className="mt-6 flex gap-2 no-print">
               <button 
                 onClick={() => window.print()}
-                className="flex-1 bg-blue-600 text-white py-3 rounded-lg font-bold hover:bg-blue-700 shadow-lg shadow-blue-100 transition"
+                className="flex-1 bg-blue-600 text-white py-3 rounded-lg font-bold hover:bg-blue-700 shadow-lg shadow-blue-100 transition text-sm"
               >
-                <i className="fas fa-print mr-2"></i> Cetak Nota
+                Cetak
               </button>
               <button 
                 onClick={() => setShowReceipt(null)}
-                className="flex-1 border border-gray-300 py-3 rounded-lg font-bold text-gray-600 hover:bg-gray-50 transition"
+                className="flex-1 border border-gray-300 py-3 rounded-lg font-bold text-gray-600 hover:bg-gray-50 transition text-sm"
               >
                 Tutup
               </button>
