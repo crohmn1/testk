@@ -1,12 +1,11 @@
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@^2.39.7';
 import { Product, User, Order } from './types';
+import { INITIAL_PRODUCTS, INITIAL_USERS } from './constants';
 
-// Ambil variabel environment dengan fallback yang aman
 const SUPABASE_URL = (import.meta as any).env?.VITE_SUPABASE_URL || '';
 const SUPABASE_ANON_KEY = (import.meta as any).env?.VITE_SUPABASE_ANON_KEY || '';
 
-// Inisialisasi hanya jika key tersedia untuk mencegah crash (Blank Screen)
 const isSupabaseReady = SUPABASE_URL !== '' && SUPABASE_ANON_KEY !== '';
 const supabase = isSupabaseReady ? createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
 
@@ -19,6 +18,21 @@ const getLocalCache = (key: string) => {
   return saved ? JSON.parse(saved) : null;
 };
 
+// Inisialisasi data awal jika localStorage masih kosong
+const initStorage = () => {
+  if (!localStorage.getItem('pos_products')) {
+    updateLocalCache('pos_products', INITIAL_PRODUCTS);
+  }
+  if (!localStorage.getItem('pos_users')) {
+    updateLocalCache('pos_users', INITIAL_USERS);
+  }
+  if (!localStorage.getItem('pos_orders')) {
+    updateLocalCache('pos_orders', []);
+  }
+};
+
+initStorage();
+
 export const supabaseService = {
   getProducts: async (): Promise<Product[]> => {
     if (!supabase) return getLocalCache('pos_products') || [];
@@ -28,7 +42,6 @@ export const supabaseService = {
       updateLocalCache('pos_products', data);
       return data as Product[];
     } catch (err) {
-      console.warn("Using offline product cache");
       return getLocalCache('pos_products') || [];
     }
   },
@@ -89,6 +102,14 @@ export const supabaseService = {
   },
 
   createOrder: async (order: Order): Promise<void> => {
+    // Update stok lokal
+    const prods = getLocalCache('pos_products') || [];
+    order.items.forEach(item => {
+      const pIndex = prods.findIndex((p: any) => p.id === item.id);
+      if (pIndex > -1) prods[pIndex].stock -= item.quantity;
+    });
+    updateLocalCache('pos_products', prods);
+
     const orders = getLocalCache('pos_orders') || [];
     orders.unshift(order);
     updateLocalCache('pos_orders', orders);
@@ -99,7 +120,6 @@ export const supabaseService = {
       const { error } = await supabase.from('orders').insert(order);
       if (error) throw error;
       
-      // Update stok lokal & remote
       for (const item of order.items) {
         const { data: p } = await supabase.from('products').select('stock').eq('id', item.id).single();
         if (p) {

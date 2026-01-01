@@ -80,9 +80,13 @@ const App: React.FC = () => {
 
     const total = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0) - discount;
     const date = new Date();
-    const dateStr = date.toISOString().split('T')[0].replace(/-/g, '');
+    
+    // Format: DDMMYYYYxxxx
+    const d = date.getDate().toString().padStart(2, '0');
+    const m = (date.getMonth() + 1).toString().padStart(2, '0');
+    const y = date.getFullYear().toString();
     const random = Math.floor(1000 + Math.random() * 9000);
-    const receiptNum = `${dateStr}${random}`;
+    const receiptNum = `${d}${m}${y}${random}`;
 
     const newOrder: Order = {
       id: crypto.randomUUID(),
@@ -104,8 +108,9 @@ const App: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-screen bg-blue-50">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-600"></div>
+      <div className="flex flex-col items-center justify-center h-screen bg-white">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-blue-600 border-opacity-20 border-t-blue-600 mb-4"></div>
+        <p className="text-gray-400 font-bold text-sm tracking-widest uppercase animate-pulse">Memuat SmartPOS...</p>
       </div>
     );
   }
@@ -114,7 +119,6 @@ const App: React.FC = () => {
 
   return (
     <div className="min-h-screen flex flex-col bg-gray-50 pb-20 md:pb-0">
-      {/* Header */}
       <header className="bg-white border-b sticky top-0 z-40 px-3 py-2.5 md:px-4 md:py-3 shadow-sm">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-3">
@@ -122,7 +126,6 @@ const App: React.FC = () => {
               <i className="fas fa-cash-register"></i> <span>SmartPOS</span>
             </h1>
             
-            {/* Desktop Navigation */}
             {user && (
               <nav className="hidden md:flex gap-1 ml-6">
                 <button 
@@ -176,7 +179,6 @@ const App: React.FC = () => {
         </div>
       </header>
 
-      {/* Main Content */}
       <main className="flex-1 overflow-auto p-3 md:p-6">
         <div className="max-w-7xl mx-auto">
           {view === 'catalog' && (
@@ -211,7 +213,6 @@ const App: React.FC = () => {
         </div>
       </main>
 
-      {/* Mobile Navigation Bar */}
       {user && (
         <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 px-8 py-3 flex justify-between items-center z-50 shadow-[0_-4px_10px_rgba(0,0,0,0.05)]">
           <button 
@@ -240,14 +241,12 @@ const App: React.FC = () => {
         </div>
       )}
 
-      {/* Login Modal */}
       <dialog id="login-modal" className="modal p-0 rounded-2xl shadow-2xl backdrop:bg-black/60">
         <div className="w-[320px] md:w-[350px]">
           <PinLogin onLogin={handleLogin} onCancel={() => (document.getElementById('login-modal') as any).close()} />
         </div>
       </dialog>
 
-      {/* Receipt Modal */}
       {showReceipt && (
         <div className="fixed inset-0 z-50 bg-black/70 flex items-center justify-center p-3">
           <div className="bg-white rounded-xl max-w-[340px] w-full p-5 shadow-2xl animate-in zoom-in duration-200">
@@ -259,7 +258,7 @@ const App: React.FC = () => {
                 onClick={() => window.print()}
                 className="flex-1 bg-blue-600 text-white py-3 rounded-lg font-bold hover:bg-blue-700 shadow-lg shadow-blue-100 transition text-sm"
               >
-                Cetak
+                Cetak Nota
               </button>
               <button 
                 onClick={() => setShowReceipt(null)}

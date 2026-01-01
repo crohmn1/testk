@@ -12,6 +12,7 @@ const PinLogin: React.FC<PinLoginProps> = ({ onLogin, onCancel }) => {
   const [pin, setPin] = useState('');
   const [error, setError] = useState('');
   const [users, setUsers] = useState<User[]>([]);
+  const [activeKey, setActiveKey] = useState<string | null>(null);
 
   useEffect(() => {
     supabaseService.getUsers().then(setUsers);
@@ -46,8 +47,40 @@ const PinLogin: React.FC<PinLoginProps> = ({ onLogin, onCancel }) => {
     }
   };
 
+  const startPress = (key: string) => setActiveKey(key);
+  const endPress = () => setActiveKey(null);
+
+  // Base class tanpa pseudo-class hover/active/focus
+  const baseNumClass = "h-14 text-xl font-black rounded-xl border border-transparent select-none touch-manipulation outline-none appearance-none flex items-center justify-center transition-transform duration-75";
+
+  const renderButton = (label: string | React.ReactNode, id: string, onClick: () => void, extraClass: string = "") => {
+    const isActive = activeKey === id;
+    return (
+      <button
+        type="button"
+        onMouseDown={() => startPress(id)}
+        onMouseUp={endPress}
+        onMouseLeave={endPress}
+        onTouchStart={() => startPress(id)}
+        onTouchEnd={endPress}
+        onClick={(e) => {
+          e.preventDefault();
+          onClick();
+        }}
+        className={`${baseNumClass} ${extraClass} ${
+          isActive 
+            ? 'bg-blue-100 scale-90 text-blue-700' 
+            : (extraClass.includes('text-red') || extraClass.includes('text-gray-400') ? 'bg-transparent' : 'bg-gray-50 text-gray-700')
+        }`}
+        style={{ WebkitTouchCallout: 'none' }}
+      >
+        {label}
+      </button>
+    );
+  };
+
   return (
-    <div className="bg-white p-6 rounded-2xl shadow-xl">
+    <div className="bg-white p-6 rounded-2xl shadow-xl select-none">
       <div className="text-center mb-6">
         <h2 className="text-xl font-bold text-gray-800">Login Karyawan</h2>
         <p className="text-sm text-gray-500">Masukkan 5 digit PIN Anda</p>
@@ -57,8 +90,8 @@ const PinLogin: React.FC<PinLoginProps> = ({ onLogin, onCancel }) => {
         {[1, 2, 3, 4, 5].map((i) => (
           <div 
             key={i} 
-            className={`w-4 h-4 rounded-full border-2 transition-all duration-200 ${
-              pin.length >= i ? 'bg-blue-600 border-blue-600 scale-110' : 'bg-gray-100 border-gray-300'
+            className={`w-4 h-4 rounded-full border-2 transition-all duration-150 ${
+              pin.length >= i ? 'bg-blue-600 border-blue-600 scale-110 shadow-sm shadow-blue-200' : 'bg-gray-100 border-gray-300'
             }`}
           ></div>
         ))}
@@ -69,41 +102,34 @@ const PinLogin: React.FC<PinLoginProps> = ({ onLogin, onCancel }) => {
       </div>
 
       <div className="grid grid-cols-3 gap-3 mb-6">
-        {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((num) => (
-          <button
-            key={num}
-            onClick={() => handleKeyPress(num.toString())}
-            className="h-14 bg-gray-50 hover:bg-blue-50 text-xl font-black text-gray-700 rounded-xl transition-all active:scale-90 border border-transparent hover:border-blue-200"
-          >
-            {num}
-          </button>
-        ))}
-        <button
-          onClick={onCancel}
-          className="h-14 text-red-500 font-black text-xs uppercase tracking-widest rounded-xl hover:bg-red-50 active:scale-95"
-        >
-          Batal
-        </button>
-        <button
-          onClick={() => handleKeyPress('0')}
-          className="h-14 bg-gray-50 hover:bg-blue-50 text-xl font-black text-gray-700 rounded-xl active:scale-90 border border-transparent hover:border-blue-200"
-        >
-          0
-        </button>
-        <button
-          onClick={handleBackspace}
-          className="h-14 text-gray-400 text-xl rounded-xl hover:bg-gray-100 active:scale-95"
-        >
-          <i className="fas fa-backspace"></i>
-        </button>
+        {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((num) => 
+          renderButton(num.toString(), num.toString(), () => handleKeyPress(num.toString()))
+        )}
+        
+        {renderButton(
+          "Batal", 
+          "cancel", 
+          onCancel, 
+          "text-red-500 font-black text-[10px] uppercase tracking-widest"
+        )}
+        
+        {renderButton("0", "0", () => handleKeyPress("0"))}
+        
+        {renderButton(
+          <i className="fas fa-backspace"></i>, 
+          "backspace", 
+          handleBackspace, 
+          "text-gray-400 text-xl"
+        )}
       </div>
 
       <button 
+        type="button"
         onClick={handleLoginAttempt}
         disabled={pin.length < 5}
-        className={`w-full py-4 rounded-2xl font-black text-lg transition-all shadow-lg active:scale-95 flex items-center justify-center gap-2 ${
+        className={`w-full py-4 rounded-2xl font-black text-lg shadow-lg flex items-center justify-center gap-2 select-none outline-none transition-all active:scale-95 ${
           pin.length === 5 
-            ? 'bg-blue-600 text-white hover:bg-blue-700 shadow-blue-100' 
+            ? 'bg-blue-600 text-white shadow-blue-100' 
             : 'bg-gray-100 text-gray-300 cursor-not-allowed shadow-none'
         }`}
       >
