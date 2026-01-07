@@ -75,7 +75,7 @@ const App: React.FC = () => {
     setCart(prev => prev.filter(item => item.id !== id));
   };
 
-  const handleCheckout = async (discount: number = 0) => {
+  const handleCheckout = async (discount: number = 0, buyerName?: string, buyerPhone?: string) => {
     if (!user || cart.length === 0) return;
 
     const total = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0) - discount;
@@ -96,7 +96,9 @@ const App: React.FC = () => {
       total_amount: total,
       discount: discount,
       items: [...cart],
-      created_at: new Date().toISOString()
+      created_at: new Date().toISOString(),
+      buyer_name: buyerName || undefined,
+      buyer_phone: buyerPhone || undefined
     };
 
     await supabaseService.createOrder(newOrder);
@@ -271,7 +273,6 @@ const App: React.FC = () => {
         </div>
       )}
 
-      {/* Area Khusus Print */}
       <div id="print-area" className="hidden">
         {showReceipt && <Receipt order={showReceipt} />}
       </div>

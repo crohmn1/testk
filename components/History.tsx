@@ -15,25 +15,25 @@ const History: React.FC<HistoryProps> = ({ orders, user, onViewOrder }) => {
   const filtered = useMemo(() => {
     let result = orders;
     
-    // Filter by role: Admin and Gudang see all, others see only theirs
     const canSeeAll = user.role === Role.ADMIN || user.role === Role.GUDANG;
     
     if (!canSeeAll) {
       result = result.filter(o => o.user_id === user.id);
     }
 
-    // Filter by date
     if (filterDate) {
       result = result.filter(o => o.created_at.startsWith(filterDate));
     }
 
-    // Filter by receipt number (Search)
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
-      result = result.filter(o => o.receipt_number.toLowerCase().includes(query));
+      result = result.filter(o => 
+        o.receipt_number.toLowerCase().includes(query) || 
+        (o.buyer_name && o.buyer_name.toLowerCase().includes(query))
+      );
     }
 
-    return result.slice(0, 100); // Limit to 100
+    return result.slice(0, 100);
   }, [orders, user, filterDate, searchQuery]);
 
   return (
@@ -44,19 +44,17 @@ const History: React.FC<HistoryProps> = ({ orders, user, onViewOrder }) => {
         </h2>
         
         <div className="flex flex-col sm:flex-row items-center gap-3 w-full md:w-auto">
-          {/* Search Input */}
           <div className="relative w-full sm:w-48 md:w-64">
             <i className="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm"></i>
             <input 
               type="text" 
-              placeholder="Cari Nota..." 
+              placeholder="Cari Nota / Nama Pembeli..." 
               className="w-full pl-9 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
           </div>
 
-          {/* Date Filter */}
           <div className="flex items-center gap-2 w-full sm:w-auto">
             <input 
               type="date" 
@@ -73,7 +71,7 @@ const History: React.FC<HistoryProps> = ({ orders, user, onViewOrder }) => {
           <table className="w-full text-left">
             <thead className="bg-gray-50 border-b">
               <tr>
-                <th className="px-6 py-3 text-xs font-black text-gray-400 uppercase tracking-widest">No. Nota</th>
+                <th className="px-6 py-3 text-xs font-black text-gray-400 uppercase tracking-widest">No. Nota & Pembeli</th>
                 <th className="px-6 py-3 text-xs font-black text-gray-400 uppercase tracking-widest text-right">Total</th>
                 <th className="px-6 py-3 text-xs font-black text-gray-400 uppercase tracking-widest text-center">Aksi</th>
               </tr>
@@ -93,7 +91,12 @@ const History: React.FC<HistoryProps> = ({ orders, user, onViewOrder }) => {
                     <td className="px-6 py-4">
                       <div className="flex flex-col">
                         <span className="font-mono font-bold text-blue-600 group-hover:text-blue-700">{o.receipt_number}</span>
-                        <span className="text-[10px] text-gray-400 font-medium md:hidden">{new Date(o.created_at).toLocaleDateString('id-ID')}</span>
+                        {o.buyer_name && (
+                          <span className="text-[10px] font-bold text-gray-600 mt-1 flex items-center gap-1">
+                            <i className="fas fa-user text-[8px]"></i> {o.buyer_name}
+                          </span>
+                        )}
+                        <span className="text-[9px] text-gray-400 font-medium md:hidden">{new Date(o.created_at).toLocaleDateString('id-ID')}</span>
                       </div>
                     </td>
                     <td className="px-6 py-4 text-right">

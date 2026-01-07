@@ -35,6 +35,8 @@ export interface Order {
   discount: number;
   items: CartItem[];
   created_at: string;
+  buyer_name?: string;
+  buyer_phone?: string;
 }
 
 export interface SalesReport {

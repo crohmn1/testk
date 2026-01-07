@@ -35,6 +35,24 @@ const Receipt: React.FC<ReceiptProps> = ({ order }) => {
           <span>Tanggal:</span>
           <span>{dateStr}</span>
         </div>
+        
+        {/* Buyer Info */}
+        {(order.buyer_name || order.buyer_phone) && (
+          <div className="mt-2 pt-2 border-t border-gray-100 border-dotted">
+            {order.buyer_name && (
+              <div className="flex justify-between">
+                <span>Pelanggan:</span>
+                <span className="font-bold">{order.buyer_name}</span>
+              </div>
+            )}
+            {order.buyer_phone && (
+              <div className="flex justify-between">
+                <span>No. HP:</span>
+                <span>{order.buyer_phone}</span>
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       <table className="w-full my-4 text-xs">
