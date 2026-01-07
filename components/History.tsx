@@ -10,21 +10,36 @@ interface HistoryProps {
 
 const History: React.FC<HistoryProps> = ({ orders, user, onViewOrder }) => {
   const [filterDate, setFilterDate] = useState('');
+  const [filterUser, setFilterUser] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
+  const [visibleCount, setVisibleCount] = useState(20);
   
+  // Mendapatkan daftar unik karyawan yang ada di riwayat (untuk filter Admin)
+  const staffList = useMemo(() => {
+    const names = new Set(orders.map(o => o.user_name));
+    return Array.from(names).sort();
+  }, [orders]);
+
   const filtered = useMemo(() => {
     let result = orders;
     
+    // 1. Filter berdasarkan Role (Keamanan Dasar)
     const canSeeAll = user.role === Role.ADMIN || user.role === Role.GUDANG;
-    
     if (!canSeeAll) {
       result = result.filter(o => o.user_id === user.id);
     }
 
-    if (filterDate) {
-      result = result.filter(o => o.created_at.startsWith(filterDate));
+    // 2. Filter berdasarkan Pilihan User (Hanya untuk Admin/Gudang)
+    if (canSeeAll && filterUser !== 'all') {
+      result = result.filter(o => o.user_name === filterUser);
     }
 
+    // 3. Filter berdasarkan Tanggal
+    if (filterDate) {
+      result = result.filter(o => o.created_at.split('T')[0] === filterDate);
+    }
+
+    // 4. Filter berdasarkan Pencarian (Nomor Nota atau Nama Pembeli)
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
       result = result.filter(o => 
@@ -33,35 +48,95 @@ const History: React.FC<HistoryProps> = ({ orders, user, onViewOrder }) => {
       );
     }
 
-    return result.slice(0, 100);
-  }, [orders, user, filterDate, searchQuery]);
+    return result;
+  }, [orders, user, filterDate, filterUser, searchQuery]);
+
+  const displayData = useMemo(() => {
+    return filtered.slice(0, visibleCount);
+  }, [filtered, visibleCount]);
+
+  const handleLoadMore = () => {
+    setVisibleCount(prev => prev + 20);
+  };
+
+  const handleReset = () => {
+    setFilterDate('');
+    setFilterUser('all');
+    setSearchQuery('');
+    setVisibleCount(20);
+  };
+
+  const isFiltered = filterDate || searchQuery || (filterUser !== 'all');
+  const canSeeStaffFilter = user.role === Role.ADMIN || user.role === Role.GUDANG;
 
   return (
     <div className="space-y-6">
       <div className="bg-white p-4 rounded-xl shadow-sm border flex flex-col md:flex-row gap-4 items-center justify-between">
-        <h2 className="text-xl font-bold text-gray-800">
-          Riwayat {user.role !== Role.ADMIN && user.role !== Role.GUDANG && '(Milik Saya)'}
-        </h2>
+        <div className="flex flex-col">
+          <h2 className="text-xl font-bold text-gray-800">
+            Riwayat {!canSeeStaffFilter && '(Milik Saya)'}
+          </h2>
+          { isFiltered && (
+            <p className="text-[10px] text-blue-600 font-bold uppercase mt-1">
+              <i className="fas fa-filter mr-1"></i> Filter Aktif
+            </p>
+          )}
+        </div>
         
         <div className="flex flex-col sm:flex-row items-center gap-3 w-full md:w-auto">
+          {/* Search Input */}
           <div className="relative w-full sm:w-48 md:w-64">
             <i className="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm"></i>
             <input 
               type="text" 
-              placeholder="Cari Nota / Nama Pembeli..." 
+              placeholder="Cari Nota / Nama..." 
               className="w-full pl-9 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              onChange={(e) => {
+                setSearchQuery(e.target.value);
+                setVisibleCount(20);
+              }}
             />
           </div>
 
           <div className="flex items-center gap-2 w-full sm:w-auto">
+            {/* Staff Filter (Admin/Gudang Only) */}
+            {canSeeStaffFilter && (
+              <select 
+                className="flex-1 sm:flex-none border border-gray-200 rounded-lg px-3 py-2 bg-gray-50 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 font-medium"
+                value={filterUser}
+                onChange={(e) => {
+                  setFilterUser(e.target.value);
+                  setVisibleCount(20);
+                }}
+              >
+                <option value="all">Semua Karyawan</option>
+                {staffList.map(name => (
+                  <option key={name} value={name}>{name}</option>
+                ))}
+              </select>
+            )}
+
+            {/* Date Input */}
             <input 
               type="date" 
-              className="w-full sm:w-auto border border-gray-200 rounded-lg px-3 py-2 bg-gray-50 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="flex-1 sm:flex-none border border-gray-200 rounded-lg px-3 py-2 bg-gray-50 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 font-medium"
               value={filterDate}
-              onChange={(e) => setFilterDate(e.target.value)}
+              onChange={(e) => {
+                setFilterDate(e.target.value);
+                setVisibleCount(20);
+              }}
             />
+            
+            {isFiltered && (
+              <button 
+                onClick={handleReset}
+                className="p-2.5 text-red-500 bg-red-50 rounded-lg hover:bg-red-100 transition"
+                title="Reset Filter"
+              >
+                <i className="fas fa-times-circle"></i>
+              </button>
+            )}
           </div>
         </div>
       </div>
@@ -72,17 +147,20 @@ const History: React.FC<HistoryProps> = ({ orders, user, onViewOrder }) => {
             <thead className="bg-gray-50 border-b">
               <tr>
                 <th className="px-6 py-3 text-xs font-black text-gray-400 uppercase tracking-widest">No. Nota & Pembeli</th>
+                <th className="px-6 py-3 text-xs font-black text-gray-400 uppercase tracking-widest">Petugas</th>
                 <th className="px-6 py-3 text-xs font-black text-gray-400 uppercase tracking-widest text-right">Total</th>
                 <th className="px-6 py-3 text-xs font-black text-gray-400 uppercase tracking-widest text-center">Aksi</th>
               </tr>
             </thead>
             <tbody className="divide-y">
-              {filtered.length === 0 ? (
+              {displayData.length === 0 ? (
                 <tr>
-                  <td colSpan={3} className="px-6 py-10 text-center text-gray-400 italic text-sm">Tidak ada riwayat</td>
+                  <td colSpan={4} className="px-6 py-10 text-center text-gray-400 italic text-sm">
+                    { isFiltered ? 'Tidak ada data yang cocok dengan filter' : 'Tidak ada riwayat' }
+                  </td>
                 </tr>
               ) : (
-                filtered.map(o => (
+                displayData.map(o => (
                   <tr 
                     key={o.id} 
                     onClick={() => onViewOrder(o)}
@@ -96,7 +174,17 @@ const History: React.FC<HistoryProps> = ({ orders, user, onViewOrder }) => {
                             <i className="fas fa-user text-[8px]"></i> {o.buyer_name}
                           </span>
                         )}
-                        <span className="text-[9px] text-gray-400 font-medium md:hidden">{new Date(o.created_at).toLocaleDateString('id-ID')}</span>
+                        <span className="text-[9px] text-gray-400 font-medium mt-0.5">
+                          {new Date(o.created_at).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })} • {new Date(o.created_at).toLocaleDateString('id-ID')}
+                        </span>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="flex items-center gap-2">
+                        <div className="w-6 h-6 rounded-full bg-gray-100 text-gray-500 flex items-center justify-center text-[10px] font-black">
+                          {o.user_name.charAt(0)}
+                        </div>
+                        <span className="text-[11px] font-bold text-gray-700">{o.user_name}</span>
                       </div>
                     </td>
                     <td className="px-6 py-4 text-right">
@@ -115,9 +203,25 @@ const History: React.FC<HistoryProps> = ({ orders, user, onViewOrder }) => {
             </tbody>
           </table>
         </div>
+
+        <div className="p-4 bg-gray-50 border-t flex flex-col items-center gap-3">
+          <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
+            {filtered.length > 0 ? `Menampilkan ${displayData.length} dari ${filtered.length} Transaksi` : '0 Transaksi ditemukan'}
+          </p>
+          
+          {visibleCount < filtered.length && (
+            <button 
+              onClick={handleLoadMore}
+              className="px-6 py-2 bg-white border border-gray-200 rounded-full text-xs font-bold text-blue-600 hover:bg-blue-50 transition shadow-sm active:scale-95 flex items-center gap-2"
+            >
+              Tampilkan Lebih Banyak <i className="fas fa-chevron-down text-[10px]"></i>
+            </button>
+          )}
+        </div>
       </div>
+      
       <p className="text-center text-[10px] text-gray-400 font-bold uppercase tracking-widest mt-2">
-        <i className="fas fa-info-circle mr-1"></i> Klik baris untuk detail & cetak
+        <i className="fas fa-info-circle mr-1"></i> Data disinkronkan dari database utama
       </p>
     </div>
   );
