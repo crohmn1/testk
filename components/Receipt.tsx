@@ -17,11 +17,9 @@ const Receipt: React.FC<ReceiptProps> = ({ order }) => {
   const discountPercent = subtotal > 0 ? Math.round((order.discount / subtotal) * 100) : 0;
 
   return (
-    <div className="text-gray-800 font-mono text-sm leading-tight p-2" id="print-section">
+    <div className="text-gray-800 font-mono text-sm leading-tight p-2">
       <div className="text-center mb-6">
-        <h2 className="text-xl font-bold uppercase">SmartPOS Store</h2>
-        <p className="text-xs">Jl. Modern POS No. 123</p>
-        <p className="text-xs">Jakarta, Indonesia</p>
+        <h2 className="text-xl font-bold uppercase">NOTA</h2>
       </div>
 
       <div className="border-b border-dashed py-3 space-y-1 text-xs">
@@ -80,7 +78,6 @@ const Receipt: React.FC<ReceiptProps> = ({ order }) => {
 
       <div className="text-center mt-8 pt-4 border-t border-gray-100">
         <p className="text-[10px] text-gray-500">Terima kasih telah berbelanja!</p>
-        <p className="text-[10px] text-gray-500 mt-1">Visit: www.smartpos.com</p>
       </div>
     </div>
   );

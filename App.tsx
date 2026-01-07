@@ -119,7 +119,7 @@ const App: React.FC = () => {
 
   return (
     <div className="min-h-screen flex flex-col bg-gray-50 pb-20 md:pb-0">
-      <header className="bg-white border-b sticky top-0 z-40 px-3 py-2.5 md:px-4 md:py-3 shadow-sm">
+      <header className="bg-white border-b sticky top-0 z-40 px-3 py-2.5 md:px-4 md:py-3 shadow-sm no-print">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-3">
             <h1 className="text-lg md:text-2xl font-black text-blue-700 flex items-center gap-2 tracking-tight">
@@ -179,7 +179,7 @@ const App: React.FC = () => {
         </div>
       </header>
 
-      <main className="flex-1 overflow-auto p-3 md:p-6">
+      <main className="flex-1 overflow-auto p-3 md:p-6 no-print">
         <div className="max-w-7xl mx-auto">
           {view === 'catalog' && (
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 md:gap-6">
@@ -214,7 +214,7 @@ const App: React.FC = () => {
       </main>
 
       {user && (
-        <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 px-8 py-3 flex justify-between items-center z-50 shadow-[0_-4px_10px_rgba(0,0,0,0.05)]">
+        <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 px-8 py-3 flex justify-between items-center z-50 shadow-[0_-4px_10px_rgba(0,0,0,0.05)] no-print">
           <button 
             onClick={() => setView('catalog')}
             className={`flex flex-col items-center gap-1 ${view === 'catalog' ? 'text-blue-600' : 'text-gray-400'}`}
@@ -241,19 +241,19 @@ const App: React.FC = () => {
         </div>
       )}
 
-      <dialog id="login-modal" className="modal p-0 rounded-2xl shadow-2xl backdrop:bg-black/60">
-        <div className="w-[320px] md:w-[350px]">
+      <dialog id="login-modal" className="modal p-0 rounded-2xl shadow-2xl backdrop:bg-black/60 no-print">
+        <div className="w-[320px] md:w-[400px]">
           <PinLogin onLogin={handleLogin} onCancel={() => (document.getElementById('login-modal') as any).close()} />
         </div>
       </dialog>
 
       {showReceipt && (
-        <div className="fixed inset-0 z-50 bg-black/70 flex items-center justify-center p-3">
+        <div className="fixed inset-0 z-50 bg-black/70 flex items-center justify-center p-3 no-print">
           <div className="bg-white rounded-xl max-w-[340px] w-full p-5 shadow-2xl animate-in zoom-in duration-200">
             <div className="max-h-[70vh] overflow-y-auto">
               <Receipt order={showReceipt} />
             </div>
-            <div className="mt-6 flex gap-2 no-print">
+            <div className="mt-6 flex gap-2">
               <button 
                 onClick={() => window.print()}
                 className="flex-1 bg-blue-600 text-white py-3 rounded-lg font-bold hover:bg-blue-700 shadow-lg shadow-blue-100 transition text-sm"
@@ -270,7 +270,9 @@ const App: React.FC = () => {
           </div>
         </div>
       )}
-      <div id="print-section" className="hidden">
+
+      {/* Area Khusus Print */}
+      <div id="print-area" className="hidden">
         {showReceipt && <Receipt order={showReceipt} />}
       </div>
     </div>

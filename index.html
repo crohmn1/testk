@@ -21,14 +21,18 @@
       body * {
         visibility: hidden;
       }
-      #print-section, #print-section * {
+      #print-area, #print-area * {
         visibility: visible;
       }
-      #print-section {
+      #print-area {
         position: absolute;
         left: 0;
         top: 0;
         width: 100%;
+        display: block !important;
+      }
+      .no-print {
+        display: none !important;
       }
     }
     input::-webkit-outer-spin-button,

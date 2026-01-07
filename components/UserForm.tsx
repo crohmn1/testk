@@ -18,8 +18,8 @@ const UserForm: React.FC<UserFormProps> = ({ user, onClose, onSave }) => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (formData.pin.length !== 5) {
-      alert('PIN harus tepat 5 digit');
+    if (formData.pin.length < 4 || formData.pin.length > 12) {
+      alert('PIN harus berukuran 4 sampai 12 digit');
       return;
     }
     onSave(formData);
@@ -45,18 +45,18 @@ const UserForm: React.FC<UserFormProps> = ({ user, onClose, onSave }) => {
         </div>
 
         <div>
-          <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1.5 ml-1">PIN Keamanan (5 Digit)</label>
+          <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1.5 ml-1">PIN Keamanan (4-12 Digit)</label>
           <input 
             required
             type="password" 
-            maxLength={5}
+            maxLength={12}
             inputMode="numeric"
-            placeholder="•••••"
-            className="w-full bg-gray-50 border border-gray-200 p-3 rounded-xl tracking-[1em] text-center font-black focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
+            placeholder="••••"
+            className="w-full bg-gray-50 border border-gray-200 p-3 rounded-xl tracking-[0.5em] text-center font-black focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
             value={formData.pin}
             onChange={e => setFormData({ ...formData, pin: e.target.value.replace(/\D/g, '') })}
           />
-          <p className="text-[9px] text-gray-400 mt-1 ml-1">* PIN digunakan untuk login kasir/sales</p>
+          <p className="text-[9px] text-gray-400 mt-1 ml-1">* PIN minimal 4 digit dan maksimal 12 digit</p>
         </div>
 
         <div>

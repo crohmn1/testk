@@ -19,7 +19,7 @@ const PinLogin: React.FC<PinLoginProps> = ({ onLogin, onCancel }) => {
   }, []);
 
   const handleKeyPress = (num: string) => {
-    if (pin.length < 5) {
+    if (pin.length < 12) {
       setPin(prev => prev + num);
       setError('');
     }
@@ -29,9 +29,15 @@ const PinLogin: React.FC<PinLoginProps> = ({ onLogin, onCancel }) => {
     setPin(prev => prev.slice(0, -1));
   };
 
+  const handleCancelAction = () => {
+    setPin('');
+    setError('');
+    onCancel();
+  };
+
   const handleLoginAttempt = () => {
-    if (pin.length < 5) {
-      setError('PIN harus 5 digit');
+    if (pin.length < 4) {
+      setError('PIN minimal 4 digit');
       return;
     }
 
@@ -50,7 +56,6 @@ const PinLogin: React.FC<PinLoginProps> = ({ onLogin, onCancel }) => {
   const startPress = (key: string) => setActiveKey(key);
   const endPress = () => setActiveKey(null);
 
-  // Base class tanpa pseudo-class hover/active/focus
   const baseNumClass = "h-14 text-xl font-black rounded-xl border border-transparent select-none touch-manipulation outline-none appearance-none flex items-center justify-center transition-transform duration-75";
 
   const renderButton = (label: string | React.ReactNode, id: string, onClick: () => void, extraClass: string = "") => {
@@ -83,22 +88,31 @@ const PinLogin: React.FC<PinLoginProps> = ({ onLogin, onCancel }) => {
     <div className="bg-white p-6 rounded-2xl shadow-xl select-none">
       <div className="text-center mb-6">
         <h2 className="text-xl font-bold text-gray-800">Login Karyawan</h2>
-        <p className="text-sm text-gray-500">Masukkan 5 digit PIN Anda</p>
+        <p className="text-sm text-gray-500">Masukkan sandi angka Anda</p>
       </div>
 
-      <div className="flex justify-center gap-3 mb-6">
-        {[1, 2, 3, 4, 5].map((i) => (
-          <div 
-            key={i} 
-            className={`w-4 h-4 rounded-full border-2 transition-all duration-150 ${
-              pin.length >= i ? 'bg-blue-600 border-blue-600 scale-110 shadow-sm shadow-blue-200' : 'bg-gray-100 border-gray-300'
-            }`}
-          ></div>
-        ))}
+      <div className="flex flex-wrap justify-center gap-2 mb-6 min-h-[24px]">
+        {/* Tampilkan indikator dinamis */}
+        {pin.length === 0 ? (
+          <p className="text-[10px] text-gray-300 font-bold uppercase tracking-widest animate-pulse">Menunggu Input...</p>
+        ) : (
+          Array.from({ length: pin.length }).map((_, i) => (
+            <div 
+              key={i} 
+              className="w-3 h-3 rounded-full bg-blue-600 shadow-sm shadow-blue-200 animate-in zoom-in duration-150"
+            ></div>
+          ))
+        )}
       </div>
 
       <div className="h-6 mb-4">
-        {error && <p className="text-red-500 text-center text-sm font-bold animate-pulse">{error}</p>}
+        {error ? (
+          <p className="text-red-500 text-center text-sm font-bold animate-shake">{error}</p>
+        ) : (
+          <p className="text-center text-[10px] text-gray-400 font-medium">
+            {pin.length > 0 && `${pin.length} / 12 digit`}
+          </p>
+        )}
       </div>
 
       <div className="grid grid-cols-3 gap-3 mb-6">
@@ -109,7 +123,7 @@ const PinLogin: React.FC<PinLoginProps> = ({ onLogin, onCancel }) => {
         {renderButton(
           "Batal", 
           "cancel", 
-          onCancel, 
+          handleCancelAction, 
           "text-red-500 font-black text-[10px] uppercase tracking-widest"
         )}
         
@@ -126,9 +140,9 @@ const PinLogin: React.FC<PinLoginProps> = ({ onLogin, onCancel }) => {
       <button 
         type="button"
         onClick={handleLoginAttempt}
-        disabled={pin.length < 5}
+        disabled={pin.length < 4}
         className={`w-full py-4 rounded-2xl font-black text-lg shadow-lg flex items-center justify-center gap-2 select-none outline-none transition-all active:scale-95 ${
-          pin.length === 5 
+          pin.length >= 4 
             ? 'bg-blue-600 text-white shadow-blue-100' 
             : 'bg-gray-100 text-gray-300 cursor-not-allowed shadow-none'
         }`}
