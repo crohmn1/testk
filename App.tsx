@@ -120,7 +120,7 @@ const App: React.FC = () => {
   const canUseCart = user && user.role !== Role.GUDANG;
 
   return (
-    <div className="min-h-screen flex flex-col bg-gray-50 pb-20 md:pb-0">
+    <div className="min-h-screen flex flex-col bg-gray-50 pb-24 md:pb-0">
       <header className="bg-white border-b sticky top-0 z-40 px-3 py-2.5 md:px-4 md:py-3 shadow-sm no-print">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-3">
@@ -215,31 +215,54 @@ const App: React.FC = () => {
         </div>
       </main>
 
+      {/* Floating Pill Dock Navigation - Updated Aesthetic */}
       {user && (
-        <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 px-8 py-3 flex justify-between items-center z-50 shadow-[0_-4px_10px_rgba(0,0,0,0.05)] no-print">
-          <button 
-            onClick={() => setView('catalog')}
-            className={`flex flex-col items-center gap-1 ${view === 'catalog' ? 'text-blue-600' : 'text-gray-400'}`}
-          >
-            <i className="fas fa-th-large text-lg"></i>
-            <span className="text-[9px] font-bold">Katalog</span>
-          </button>
-          <button 
-            onClick={() => setView('history')}
-            className={`flex flex-col items-center gap-1 ${view === 'history' ? 'text-blue-600' : 'text-gray-400'}`}
-          >
-            <i className="fas fa-history text-lg"></i>
-            <span className="text-[9px] font-bold">Riwayat</span>
-          </button>
-          {user.role === Role.ADMIN && (
+        <div className="md:hidden fixed bottom-8 left-1/2 -translate-x-1/2 z-50 no-print px-4 w-auto">
+          <div className="bg-white/80 backdrop-blur-xl p-1.5 rounded-full flex items-center gap-1 shadow-[0_15px_40px_rgba(37,99,235,0.15)] border border-white">
             <button 
-              onClick={() => setView('admin')}
-              className={`flex flex-col items-center gap-1 ${view === 'admin' ? 'text-blue-600' : 'text-gray-400'}`}
+              onClick={() => setView('catalog')}
+              className={`relative flex items-center justify-center h-12 rounded-full transition-all duration-500 overflow-hidden ${
+                view === 'catalog' 
+                  ? 'bg-blue-600 text-white px-6 w-auto shadow-lg shadow-blue-400/20' 
+                  : 'text-blue-300/60 w-12 hover:text-blue-600'
+              }`}
             >
-              <i className="fas fa-cog text-lg"></i>
-              <span className="text-[9px] font-bold">Menu</span>
+              <i className="fas fa-th-large text-lg shrink-0"></i>
+              <span className={`ml-2 text-[11px] font-black uppercase tracking-wider whitespace-nowrap transition-all duration-300 ${view === 'catalog' ? 'opacity-100' : 'opacity-0 w-0 absolute'}`}>
+                Katalog
+              </span>
             </button>
-          )}
+            
+            <button 
+              onClick={() => setView('history')}
+              className={`relative flex items-center justify-center h-12 rounded-full transition-all duration-500 overflow-hidden ${
+                view === 'history' 
+                  ? 'bg-blue-600 text-white px-6 w-auto shadow-lg shadow-blue-400/20' 
+                  : 'text-blue-300/60 w-12 hover:text-blue-600'
+              }`}
+            >
+              <i className="fas fa-history text-lg shrink-0"></i>
+              <span className={`ml-2 text-[11px] font-black uppercase tracking-wider whitespace-nowrap transition-all duration-300 ${view === 'history' ? 'opacity-100' : 'opacity-0 w-0 absolute'}`}>
+                Riwayat
+              </span>
+            </button>
+            
+            {user.role === Role.ADMIN && (
+              <button 
+                onClick={() => setView('admin')}
+                className={`relative flex items-center justify-center h-12 rounded-full transition-all duration-500 overflow-hidden ${
+                  view === 'admin' 
+                    ? 'bg-blue-600 text-white px-6 w-auto shadow-lg shadow-blue-400/20' 
+                    : 'text-blue-300/60 w-12 hover:text-blue-600'
+                }`}
+              >
+                <i className="fas fa-cog text-lg shrink-0"></i>
+                <span className={`ml-2 text-[11px] font-black uppercase tracking-wider whitespace-nowrap transition-all duration-300 ${view === 'admin' ? 'opacity-100' : 'opacity-0 w-0 absolute'}`}>
+                  Admin
+                </span>
+              </button>
+            )}
+          </div>
         </div>
       )}
 
