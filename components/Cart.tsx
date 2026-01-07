@@ -23,7 +23,6 @@ const Cart: React.FC<CartProps> = ({ items, onUpdateQuantity, onSetQuantity, onR
 
   const handleCheckout = () => {
     onCheckout(discountAmount, buyerName, buyerPhone);
-    // Reset form after checkout
     setBuyerName('');
     setBuyerPhone('');
     setDiscountPercent(0);
@@ -31,7 +30,7 @@ const Cart: React.FC<CartProps> = ({ items, onUpdateQuantity, onSetQuantity, onR
   };
 
   return (
-    <div className="bg-white rounded-2xl shadow-lg border h-full flex flex-col overflow-hidden max-h-[85vh]">
+    <div className="bg-white rounded-2xl border h-full flex flex-col overflow-hidden max-h-[85vh]">
       <div className="p-4 bg-gray-50 border-b flex justify-between items-center shrink-0">
         <h2 className="text-xl font-bold text-gray-800 flex items-center gap-2">
           <i className="fas fa-shopping-basket text-blue-600"></i> Keranjang
@@ -39,7 +38,7 @@ const Cart: React.FC<CartProps> = ({ items, onUpdateQuantity, onSetQuantity, onR
         {items.length > 0 && (
           <button 
             onClick={onReset} 
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider text-red-500 bg-red-50 hover:bg-red-100 transition active:scale-95 border border-red-100"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider text-red-500 bg-red-50 border border-red-100"
           >
             <i className="fas fa-trash-alt"></i> Kosongkan
           </button>
@@ -56,7 +55,7 @@ const Cart: React.FC<CartProps> = ({ items, onUpdateQuantity, onSetQuantity, onR
         ) : (
           <>
             {items.map(item => (
-              <div key={item.id} className="flex items-center gap-4 pb-3 border-b border-gray-50 last:border-0 group">
+              <div key={item.id} className="flex items-center gap-4 pb-3 border-b border-gray-50 last:border-0">
                 <div className="flex-1 min-w-0">
                   <h4 className="font-bold text-gray-800 truncate text-xs md:text-sm leading-tight">{item.name}</h4>
                   <p className="text-blue-600 font-black text-[10px] md:text-xs mt-0.5">Rp{item.price.toLocaleString('id-ID')}</p>
@@ -65,7 +64,7 @@ const Cart: React.FC<CartProps> = ({ items, onUpdateQuantity, onSetQuantity, onR
                 <div className="flex items-center gap-0.5 bg-gray-50 rounded-xl p-0.5 h-fit shrink-0 border border-gray-100 ml-auto">
                   <button 
                     onClick={() => onUpdateQuantity(item.id, -1)} 
-                    className="w-7 h-7 flex items-center justify-center hover:bg-white hover:shadow-sm rounded-lg transition text-gray-400 hover:text-red-500"
+                    className="w-7 h-7 flex items-center justify-center rounded-lg text-gray-400"
                   >
                     <i className="fas fa-minus text-[8px]"></i>
                   </button>
@@ -92,7 +91,7 @@ const Cart: React.FC<CartProps> = ({ items, onUpdateQuantity, onSetQuantity, onR
                   
                   <button 
                     onClick={() => onUpdateQuantity(item.id, 1)} 
-                    className="w-7 h-7 flex items-center justify-center hover:bg-white hover:shadow-sm rounded-lg transition text-gray-400 hover:text-blue-600"
+                    className="w-7 h-7 flex items-center justify-center rounded-lg text-gray-400"
                   >
                     <i className="fas fa-plus text-[8px]"></i>
                   </button>
@@ -100,7 +99,7 @@ const Cart: React.FC<CartProps> = ({ items, onUpdateQuantity, onSetQuantity, onR
 
                 <button 
                   onClick={() => onRemove(item.id)} 
-                  className="text-gray-300 hover:text-red-500 transition pl-1 pr-0 shrink-0"
+                  className="text-gray-300 pl-1 pr-0 shrink-0"
                   title="Hapus"
                 >
                   <i className="fas fa-times-circle text-base"></i>
@@ -108,11 +107,10 @@ const Cart: React.FC<CartProps> = ({ items, onUpdateQuantity, onSetQuantity, onR
               </div>
             ))}
 
-            {/* Buyer Info Toggle */}
             <div className="mt-4 pt-4 border-t border-gray-100">
               <button 
                 onClick={() => setShowBuyerForm(!showBuyerForm)}
-                className="w-full flex items-center justify-between text-[10px] font-black uppercase tracking-widest text-blue-600 bg-blue-50 px-3 py-2 rounded-lg hover:bg-blue-100 transition"
+                className="w-full flex items-center justify-between text-[10px] font-black uppercase tracking-widest text-blue-600 bg-blue-50 px-3 py-2 rounded-lg"
               >
                 <span><i className="fas fa-user-tag mr-2"></i> {showBuyerForm ? 'Sembunyikan Data Pembeli' : 'Tambah Data Pembeli'}</span>
                 <i className={`fas fa-chevron-${showBuyerForm ? 'up' : 'down'}`}></i>
@@ -125,7 +123,7 @@ const Cart: React.FC<CartProps> = ({ items, onUpdateQuantity, onSetQuantity, onR
                     <input 
                       type="text"
                       placeholder="Masukkan nama..."
-                      className="w-full bg-white border border-gray-200 px-3 py-2 rounded-lg text-xs font-bold focus:ring-2 focus:ring-blue-100 outline-none"
+                      className="w-full bg-white border border-gray-200 px-3 py-2 rounded-lg text-xs font-bold outline-none"
                       value={buyerName}
                       onChange={(e) => setBuyerName(e.target.value)}
                     />
@@ -135,7 +133,7 @@ const Cart: React.FC<CartProps> = ({ items, onUpdateQuantity, onSetQuantity, onR
                     <input 
                       type="tel"
                       placeholder="0812..."
-                      className="w-full bg-white border border-gray-200 px-3 py-2 rounded-lg text-xs font-bold focus:ring-2 focus:ring-blue-100 outline-none"
+                      className="w-full bg-white border border-gray-200 px-3 py-2 rounded-lg text-xs font-bold outline-none"
                       value={buyerPhone}
                       onChange={(e) => setBuyerPhone(e.target.value)}
                     />
@@ -147,7 +145,7 @@ const Cart: React.FC<CartProps> = ({ items, onUpdateQuantity, onSetQuantity, onR
         )}
       </div>
 
-      <div className="p-4 bg-white border-t border-gray-100 space-y-4 shadow-[0_-4px_10px_rgba(0,0,0,0.02)] shrink-0">
+      <div className="p-4 bg-white border-t border-gray-100 space-y-4 shrink-0">
         <div className="space-y-2">
           <div className="flex justify-between text-gray-400 text-[10px] font-bold uppercase tracking-wider">
             <span>Subtotal</span>
@@ -163,7 +161,7 @@ const Cart: React.FC<CartProps> = ({ items, onUpdateQuantity, onSetQuantity, onR
                 placeholder="0"
                 max="100"
                 min="0"
-                className="w-full px-3 py-1.5 bg-gray-50 border border-gray-100 rounded-lg text-right text-xs font-black text-red-500 focus:ring-2 focus:ring-red-100 focus:outline-none transition pr-7"
+                className="w-full px-3 py-1.5 bg-gray-50 border border-gray-100 rounded-lg text-right text-xs font-black text-red-500 focus:outline-none pr-7"
                 value={discountPercent || ''}
                 onChange={(e) => {
                   const val = Number(e.target.value);
@@ -190,7 +188,7 @@ const Cart: React.FC<CartProps> = ({ items, onUpdateQuantity, onSetQuantity, onR
         <button 
           disabled={items.length === 0}
           onClick={handleCheckout}
-          className="w-full bg-blue-600 text-white py-4 rounded-2xl font-black text-lg hover:bg-blue-700 shadow-lg shadow-blue-100 transition disabled:opacity-30 disabled:grayscale disabled:cursor-not-allowed flex items-center justify-center gap-3 active:scale-95"
+          className="w-full bg-blue-600 text-white py-4 rounded-2xl font-black text-lg disabled:opacity-30 disabled:grayscale disabled:cursor-not-allowed flex items-center justify-center gap-3"
         >
           <i className="fas fa-print"></i> 
           <span>SELESAI & CETAK</span>

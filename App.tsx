@@ -45,15 +45,12 @@ const App: React.FC = () => {
     const currentScrollY = scrollContainerRef.current.scrollTop;
     const scrollDiff = currentScrollY - lastScrollY.current;
 
-    // Selalu tampilkan jika di paling atas
     if (currentScrollY < 10) {
       setIsDockVisible(true);
     } 
-    // Sembunyikan jika scroll ke bawah lebih dari 10px
     else if (scrollDiff > 10 && isDockVisible) {
       setIsDockVisible(false);
     } 
-    // Tampilkan jika scroll ke atas lebih dari 10px
     else if (scrollDiff < -10 && !isDockVisible) {
       setIsDockVisible(true);
     }
@@ -148,7 +145,7 @@ const App: React.FC = () => {
 
   return (
     <div className="h-screen flex flex-col bg-gray-50 overflow-hidden">
-      <header className="bg-white border-b shrink-0 z-40 px-3 py-2.5 md:px-4 md:py-3 shadow-sm no-print">
+      <header className="bg-white border-b shrink-0 z-40 px-3 py-2.5 md:px-4 md:py-3 no-print">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-3">
             <h1 className="text-lg md:text-2xl font-black text-blue-700 flex items-center gap-2 tracking-tight">
@@ -159,20 +156,20 @@ const App: React.FC = () => {
               <nav className="hidden md:flex gap-1 ml-6">
                 <button 
                   onClick={() => setView('catalog')}
-                  className={`px-4 py-2 rounded-lg font-bold text-sm transition ${view === 'catalog' ? 'bg-blue-600 text-white' : 'text-gray-500 hover:bg-gray-100'}`}
+                  className={`px-4 py-2 rounded-lg font-bold text-sm ${view === 'catalog' ? 'bg-blue-600 text-white' : 'text-gray-500'}`}
                 >
                   Katalog
                 </button>
                 <button 
                   onClick={() => setView('history')}
-                  className={`px-4 py-2 rounded-lg font-bold text-sm transition ${view === 'history' ? 'bg-blue-600 text-white' : 'text-gray-500 hover:bg-gray-100'}`}
+                  className={`px-4 py-2 rounded-lg font-bold text-sm ${view === 'history' ? 'bg-blue-600 text-white' : 'text-gray-500'}`}
                 >
                   Riwayat
                 </button>
                 {user.role === Role.ADMIN && (
                   <button 
                     onClick={() => setView('admin')}
-                    className={`px-4 py-2 rounded-lg font-bold text-sm transition ${view === 'admin' ? 'bg-blue-600 text-white' : 'text-gray-500 hover:bg-gray-100'}`}
+                    className={`px-4 py-2 rounded-lg font-bold text-sm ${view === 'admin' ? 'bg-blue-600 text-white' : 'text-gray-500'}`}
                   >
                     Manajemen
                   </button>
@@ -185,7 +182,7 @@ const App: React.FC = () => {
             {!user ? (
               <button 
                 onClick={() => (document.getElementById('login-modal') as any).showModal()}
-                className="bg-blue-600 text-white px-4 py-1.5 md:px-6 md:py-2 rounded-full font-bold hover:bg-blue-700 shadow-lg shadow-blue-200 transition-all active:scale-95 flex items-center gap-2 text-sm"
+                className="bg-blue-600 text-white px-4 py-1.5 md:px-6 md:py-2 rounded-full font-bold flex items-center gap-2 text-sm"
               >
                 <i className="fas fa-lock text-xs"></i> Login
               </button>
@@ -197,7 +194,7 @@ const App: React.FC = () => {
                 </div>
                 <button 
                   onClick={handleLogout}
-                  className="text-red-600 bg-red-50 p-2 md:px-3 md:py-2 rounded-lg hover:bg-red-100 transition font-bold text-xs"
+                  className="text-red-600 bg-red-50 p-2 md:px-3 md:py-2 rounded-lg font-bold text-xs"
                   title="Logout"
                 >
                   <i className="fas fa-sign-out-alt"></i>
@@ -250,20 +247,20 @@ const App: React.FC = () => {
         </div>
       </main>
 
-      {/* Floating Pill Dock Navigation with Smart Auto-Hide */}
+      {/* Floating Pill Dock Navigation */}
       {user && (
         <div 
           className={`md:hidden fixed bottom-8 left-1/2 -translate-x-1/2 z-50 no-print px-4 w-auto transition-all duration-500 ease-in-out ${
             isDockVisible ? 'translate-y-0 opacity-100 scale-100' : 'translate-y-24 opacity-0 scale-90'
           }`}
         >
-          <div className="bg-white/80 backdrop-blur-xl p-1.5 rounded-full flex items-center gap-1 shadow-[0_15px_40px_rgba(37,99,235,0.15)] border border-white">
+          <div className="bg-white/80 backdrop-blur-xl p-1.5 rounded-full flex items-center gap-1 border border-white">
             <button 
               onClick={() => { setView('catalog'); scrollContainerRef.current?.scrollTo(0,0); }}
-              className={`relative flex items-center justify-center h-12 rounded-full transition-all duration-500 overflow-hidden ${
+              className={`relative flex items-center justify-center h-12 rounded-full overflow-hidden ${
                 view === 'catalog' 
-                  ? 'bg-blue-600 text-white px-6 w-auto shadow-lg shadow-blue-400/20' 
-                  : 'text-blue-300/60 w-12 hover:text-blue-600'
+                  ? 'bg-blue-600 text-white px-6 w-auto' 
+                  : 'text-blue-300/60 w-12'
               }`}
             >
               <i className="fas fa-th-large text-lg shrink-0"></i>
@@ -274,10 +271,10 @@ const App: React.FC = () => {
             
             <button 
               onClick={() => { setView('history'); scrollContainerRef.current?.scrollTo(0,0); }}
-              className={`relative flex items-center justify-center h-12 rounded-full transition-all duration-500 overflow-hidden ${
+              className={`relative flex items-center justify-center h-12 rounded-full overflow-hidden ${
                 view === 'history' 
-                  ? 'bg-blue-600 text-white px-6 w-auto shadow-lg shadow-blue-400/20' 
-                  : 'text-blue-300/60 w-12 hover:text-blue-600'
+                  ? 'bg-blue-600 text-white px-6 w-auto' 
+                  : 'text-blue-300/60 w-12'
               }`}
             >
               <i className="fas fa-history text-lg shrink-0"></i>
@@ -289,10 +286,10 @@ const App: React.FC = () => {
             {user.role === Role.ADMIN && (
               <button 
                 onClick={() => { setView('admin'); scrollContainerRef.current?.scrollTo(0,0); }}
-                className={`relative flex items-center justify-center h-12 rounded-full transition-all duration-500 overflow-hidden ${
+                className={`relative flex items-center justify-center h-12 rounded-full overflow-hidden ${
                   view === 'admin' 
-                    ? 'bg-blue-600 text-white px-6 w-auto shadow-lg shadow-blue-400/20' 
-                    : 'text-blue-300/60 w-12 hover:text-blue-600'
+                    ? 'bg-blue-600 text-white px-6 w-auto' 
+                    : 'text-blue-300/60 w-12'
                 }`}
               >
                 <i className="fas fa-cog text-lg shrink-0"></i>
@@ -305,28 +302,29 @@ const App: React.FC = () => {
         </div>
       )}
 
-      <dialog id="login-modal" className="modal p-0 rounded-2xl shadow-2xl backdrop:bg-black/60 no-print">
-        <div className="w-[320px] md:w-[400px]">
+      {/* Login Modal */}
+      <dialog id="login-modal" className="modal p-0 rounded-[2rem] backdrop:bg-black/70 no-print overflow-hidden">
+        <div className="w-full max-w-[350px] landscape:max-w-2xl md:max-w-4xl lg:max-w-5xl h-auto overflow-y-auto landscape:max-h-screen">
           <PinLogin onLogin={handleLogin} onCancel={() => (document.getElementById('login-modal') as any).close()} />
         </div>
       </dialog>
 
       {showReceipt && (
         <div className="fixed inset-0 z-50 bg-black/70 flex items-center justify-center p-3 no-print">
-          <div className="bg-white rounded-xl max-w-[340px] w-full p-5 shadow-2xl animate-in zoom-in duration-200">
+          <div className="bg-white rounded-xl max-w-[340px] w-full p-5 animate-in zoom-in duration-200">
             <div className="max-h-[70vh] overflow-y-auto">
               <Receipt order={showReceipt} />
             </div>
             <div className="mt-6 flex gap-2">
               <button 
                 onClick={() => window.print()}
-                className="flex-1 bg-blue-600 text-white py-3 rounded-lg font-bold hover:bg-blue-700 shadow-lg shadow-blue-100 transition text-sm"
+                className="flex-1 bg-blue-600 text-white py-3 rounded-lg font-bold text-sm"
               >
                 Cetak Nota
               </button>
               <button 
                 onClick={() => setShowReceipt(null)}
-                className="flex-1 border border-gray-300 py-3 rounded-lg font-bold text-gray-600 hover:bg-gray-50 transition text-sm"
+                className="flex-1 border border-gray-300 py-3 rounded-lg font-bold text-gray-600 text-sm"
               >
                 Tutup
               </button>

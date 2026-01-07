@@ -44,14 +44,14 @@ const Catalog: React.FC<CatalogProps> = ({ products, onAddToCart, user }) => {
 
   return (
     <div className="space-y-4 md:space-y-6">
-      {/* Search and Filters */}
-      <div className="bg-white p-3 md:p-4 rounded-xl shadow-sm border flex flex-col md:flex-row gap-3 items-center">
+      {/* Search and Filters - Static */}
+      <div className="bg-white p-3 md:p-4 rounded-xl border flex flex-col md:flex-row gap-3 items-center">
         <div className="relative flex-1 w-full">
           <i className="fas fa-search absolute left-3 top-2.5 text-gray-400 text-sm"></i>
           <input 
             type="text" 
             placeholder="Cari produk..." 
-            className="w-full pl-9 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+            className="w-full pl-9 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none text-sm"
             value={search}
             onChange={(e) => { setSearch(e.target.value); setPage(1); }}
           />
@@ -69,7 +69,7 @@ const Catalog: React.FC<CatalogProps> = ({ products, onAddToCart, user }) => {
               setSortStock(prev => prev === 'none' ? 'asc' : prev === 'asc' ? 'desc' : 'none');
               setPage(1);
             }}
-            className={`flex-1 md:flex-none px-3 py-2 rounded-lg border flex items-center justify-center gap-2 transition text-sm ${sortStock !== 'none' ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-gray-600 border-gray-200'}`}
+            className={`flex-1 md:flex-none px-3 py-2 rounded-lg border flex items-center justify-center gap-2 text-sm ${sortStock !== 'none' ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-gray-600 border-gray-200'}`}
           >
             <i className="fas fa-layer-group"></i> 
             Stok {sortStock === 'asc' ? '↑' : sortStock === 'desc' ? '↓' : ''}
@@ -77,7 +77,7 @@ const Catalog: React.FC<CatalogProps> = ({ products, onAddToCart, user }) => {
         </div>
       </div>
 
-      {/* Product List */}
+      {/* Product List - KEPT INTERACTION AS PER REQUEST */}
       <div className="bg-white rounded-xl border shadow-sm divide-y">
         {paginated.length > 0 ? (
           paginated.map(p => (
@@ -126,7 +126,7 @@ const Catalog: React.FC<CatalogProps> = ({ products, onAddToCart, user }) => {
                   className={`flex items-center justify-center rounded-lg font-bold transition ${
                     isButtonDisabled ? 'bg-gray-100 text-gray-300 cursor-not-allowed' :
                     p.stock <= 0 ? 'bg-gray-100 text-gray-400 cursor-not-allowed' : 
-                    'bg-blue-600 text-white hover:bg-blue-700 active:scale-90 shadow-sm'
+                    'bg-blue-600 text-white hover:bg-blue-700 active:scale-90'
                   } w-9 h-9 md:w-auto md:h-10 md:px-4`}
                 >
                   <i className="fas fa-plus text-sm"></i>
@@ -143,13 +143,13 @@ const Catalog: React.FC<CatalogProps> = ({ products, onAddToCart, user }) => {
         )}
       </div>
 
-      {/* Pagination */}
+      {/* Pagination - Static */}
       {totalPages > 1 && (
         <div className="flex justify-center items-center gap-2 mt-4 pb-8">
           <button 
             disabled={page === 1}
             onClick={() => setPage(p => p - 1)}
-            className="w-9 h-9 rounded-lg border border-gray-200 flex items-center justify-center disabled:opacity-20 hover:bg-white transition"
+            className="w-9 h-9 rounded-lg border border-gray-200 flex items-center justify-center disabled:opacity-20"
           >
             <i className="fas fa-chevron-left text-xs"></i>
           </button>
@@ -163,22 +163,22 @@ const Catalog: React.FC<CatalogProps> = ({ products, onAddToCart, user }) => {
           <button 
             disabled={page === totalPages}
             onClick={() => setPage(p => p + 1)}
-            className="w-9 h-9 rounded-lg border border-gray-200 flex items-center justify-center disabled:opacity-20 hover:bg-white transition"
+            className="w-9 h-9 rounded-lg border border-gray-200 flex items-center justify-center disabled:opacity-20"
           >
             <i className="fas fa-chevron-right text-xs"></i>
           </button>
         </div>
       )}
 
-      {/* Name Viewer Popup */}
+      {/* Name Viewer Popup - Static */}
       {viewingProductName && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="bg-white p-6 rounded-2xl shadow-2xl max-w-sm w-full animate-in zoom-in duration-200">
+          <div className="bg-white p-6 rounded-2xl max-w-sm w-full animate-in zoom-in duration-200">
             <h4 className="text-xs font-bold text-gray-400 uppercase mb-2">Nama Produk Lengkap:</h4>
             <p className="text-xl font-bold text-gray-800 leading-tight mb-6">{viewingProductName}</p>
             <button 
               onClick={() => setViewingProductName(null)}
-              className="w-full bg-gray-100 hover:bg-gray-200 text-gray-800 py-3 rounded-xl font-bold transition active:scale-95"
+              className="w-full bg-gray-100 text-gray-800 py-3 rounded-xl font-bold"
             >
               Tutup
             </button>

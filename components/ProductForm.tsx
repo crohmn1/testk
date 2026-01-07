@@ -29,62 +29,25 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onClose, onSave }) =
       
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-1">Nama Produk</label>
-        <input 
-          required
-          type="text" 
-          className="w-full border p-2 rounded-lg"
-          value={formData.name}
-          onChange={e => setFormData({ ...formData, name: e.target.value })}
-        />
+        <input required type="text" className="w-full border p-2 rounded-lg" value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })} />
       </div>
-
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-1">Kategori</label>
-        <input 
-          required
-          type="text" 
-          className="w-full border p-2 rounded-lg"
-          value={formData.category}
-          onChange={e => setFormData({ ...formData, category: e.target.value })}
-        />
+        <input required type="text" className="w-full border p-2 rounded-lg" value={formData.category} onChange={e => setFormData({ ...formData, category: e.target.value })} />
       </div>
-
       <div className="grid grid-cols-2 gap-4">
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">Harga (Rp)</label>
-          <input 
-            required
-            type="number" 
-            inputMode="numeric"
-            className="w-full border p-2 rounded-lg"
-            value={formData.price === 0 ? '' : formData.price}
-            placeholder="0"
-            onChange={e => {
-              const val = e.target.value === '' ? 0 : Number(e.target.value);
-              setFormData({ ...formData, price: val });
-            }}
-          />
+          <input required type="number" inputMode="numeric" className="w-full border p-2 rounded-lg" value={formData.price === 0 ? '' : formData.price} placeholder="0" onChange={e => setFormData({ ...formData, price: e.target.value === '' ? 0 : Number(e.target.value) })} />
         </div>
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">Stok</label>
-          <input 
-            required
-            type="number" 
-            inputMode="numeric"
-            className="w-full border p-2 rounded-lg"
-            value={formData.stock === 0 ? '' : formData.stock}
-            placeholder="0"
-            onChange={e => {
-              const val = e.target.value === '' ? 0 : Number(e.target.value);
-              setFormData({ ...formData, stock: val });
-            }}
-          />
+          <input required type="number" inputMode="numeric" className="w-full border p-2 rounded-lg" value={formData.stock === 0 ? '' : formData.stock} placeholder="0" onChange={e => setFormData({ ...formData, stock: e.target.value === '' ? 0 : Number(e.target.value) })} />
         </div>
       </div>
-
       <div className="flex gap-3 pt-4">
-        <button type="button" onClick={onClose} className="flex-1 px-4 py-2 border rounded-lg hover:bg-gray-50 transition">Batal</button>
-        <button type="submit" className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-bold transition shadow-lg shadow-blue-100">Simpan</button>
+        <button type="button" onClick={onClose} className="flex-1 px-4 py-2 border rounded-lg">Batal</button>
+        <button type="submit" className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg font-bold">Simpan</button>
       </div>
     </form>
   );
