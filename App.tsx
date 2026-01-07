@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Role, User, Product, CartItem, Order } from './types';
 import { supabaseService } from './supabase';
 import { APP_CONFIG } from './constants';
@@ -18,6 +18,11 @@ const App: React.FC = () => {
   const [orders, setOrders] = useState<Order[]>([]);
   const [showReceipt, setShowReceipt] = useState<Order | null>(null);
   const [loading, setLoading] = useState(true);
+  
+  // States for Smart Auto-Hide
+  const [isDockVisible, setIsDockVisible] = useState(true);
+  const lastScrollY = useRef(0);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const loadData = async () => {
@@ -32,6 +37,29 @@ const App: React.FC = () => {
     };
     loadData();
   }, []);
+
+  // Handle Smart Auto-Hide Logic
+  const handleScroll = () => {
+    if (!scrollContainerRef.current) return;
+    
+    const currentScrollY = scrollContainerRef.current.scrollTop;
+    const scrollDiff = currentScrollY - lastScrollY.current;
+
+    // Selalu tampilkan jika di paling atas
+    if (currentScrollY < 10) {
+      setIsDockVisible(true);
+    } 
+    // Sembunyikan jika scroll ke bawah lebih dari 10px
+    else if (scrollDiff > 10 && isDockVisible) {
+      setIsDockVisible(false);
+    } 
+    // Tampilkan jika scroll ke atas lebih dari 10px
+    else if (scrollDiff < -10 && !isDockVisible) {
+      setIsDockVisible(true);
+    }
+
+    lastScrollY.current = currentScrollY;
+  };
 
   const handleLogin = (authenticatedUser: User) => {
     setUser(authenticatedUser);
@@ -81,7 +109,6 @@ const App: React.FC = () => {
     const total = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0) - discount;
     const date = new Date();
     
-    // Format: DDMMYYYYxxxx
     const d = date.getDate().toString().padStart(2, '0');
     const m = (date.getMonth() + 1).toString().padStart(2, '0');
     const y = date.getFullYear().toString();
@@ -120,8 +147,8 @@ const App: React.FC = () => {
   const canUseCart = user && user.role !== Role.GUDANG;
 
   return (
-    <div className="min-h-screen flex flex-col bg-gray-50 pb-24 md:pb-0">
-      <header className="bg-white border-b sticky top-0 z-40 px-3 py-2.5 md:px-4 md:py-3 shadow-sm no-print">
+    <div className="h-screen flex flex-col bg-gray-50 overflow-hidden">
+      <header className="bg-white border-b shrink-0 z-40 px-3 py-2.5 md:px-4 md:py-3 shadow-sm no-print">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-3">
             <h1 className="text-lg md:text-2xl font-black text-blue-700 flex items-center gap-2 tracking-tight">
@@ -181,15 +208,19 @@ const App: React.FC = () => {
         </div>
       </header>
 
-      <main className="flex-1 overflow-auto p-3 md:p-6 no-print">
+      <main 
+        ref={scrollContainerRef}
+        onScroll={handleScroll}
+        className="flex-1 overflow-auto p-3 md:p-6 no-print scroll-smooth"
+      >
         <div className="max-w-7xl mx-auto">
           {view === 'catalog' && (
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 md:gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 md:gap-6 pb-20 md:pb-0">
               <div className={canUseCart ? 'lg:col-span-8 order-2 lg:order-1' : 'lg:col-span-12'}>
                 <Catalog products={products} onAddToCart={addToCart} user={user} />
               </div>
               {canUseCart && (
-                <div className="lg:col-span-4 lg:sticky lg:top-24 h-fit order-1 lg:order-2">
+                <div className="lg:col-span-4 lg:sticky lg:top-0 h-fit order-1 lg:order-2">
                   <Cart 
                     items={cart} 
                     onUpdateQuantity={updateCartQuantity} 
@@ -203,24 +234,32 @@ const App: React.FC = () => {
             </div>
           )}
           {view === 'admin' && user?.role === Role.ADMIN && (
-            <AdminDashboard 
-              products={products} 
-              onProductsChange={async () => setProducts(await supabaseService.getProducts())}
-              orders={orders}
-            />
+            <div className="pb-24 md:pb-0">
+              <AdminDashboard 
+                products={products} 
+                onProductsChange={async () => setProducts(await supabaseService.getProducts())}
+                orders={orders}
+              />
+            </div>
           )}
           {view === 'history' && user && (
-            <History orders={orders} user={user} onViewOrder={setShowReceipt} />
+            <div className="pb-24 md:pb-0">
+              <History orders={orders} user={user} onViewOrder={setShowReceipt} />
+            </div>
           )}
         </div>
       </main>
 
-      {/* Floating Pill Dock Navigation - Updated Aesthetic */}
+      {/* Floating Pill Dock Navigation with Smart Auto-Hide */}
       {user && (
-        <div className="md:hidden fixed bottom-8 left-1/2 -translate-x-1/2 z-50 no-print px-4 w-auto">
+        <div 
+          className={`md:hidden fixed bottom-8 left-1/2 -translate-x-1/2 z-50 no-print px-4 w-auto transition-all duration-500 ease-in-out ${
+            isDockVisible ? 'translate-y-0 opacity-100 scale-100' : 'translate-y-24 opacity-0 scale-90'
+          }`}
+        >
           <div className="bg-white/80 backdrop-blur-xl p-1.5 rounded-full flex items-center gap-1 shadow-[0_15px_40px_rgba(37,99,235,0.15)] border border-white">
             <button 
-              onClick={() => setView('catalog')}
+              onClick={() => { setView('catalog'); scrollContainerRef.current?.scrollTo(0,0); }}
               className={`relative flex items-center justify-center h-12 rounded-full transition-all duration-500 overflow-hidden ${
                 view === 'catalog' 
                   ? 'bg-blue-600 text-white px-6 w-auto shadow-lg shadow-blue-400/20' 
@@ -234,7 +273,7 @@ const App: React.FC = () => {
             </button>
             
             <button 
-              onClick={() => setView('history')}
+              onClick={() => { setView('history'); scrollContainerRef.current?.scrollTo(0,0); }}
               className={`relative flex items-center justify-center h-12 rounded-full transition-all duration-500 overflow-hidden ${
                 view === 'history' 
                   ? 'bg-blue-600 text-white px-6 w-auto shadow-lg shadow-blue-400/20' 
@@ -249,7 +288,7 @@ const App: React.FC = () => {
             
             {user.role === Role.ADMIN && (
               <button 
-                onClick={() => setView('admin')}
+                onClick={() => { setView('admin'); scrollContainerRef.current?.scrollTo(0,0); }}
                 className={`relative flex items-center justify-center h-12 rounded-full transition-all duration-500 overflow-hidden ${
                   view === 'admin' 
                     ? 'bg-blue-600 text-white px-6 w-auto shadow-lg shadow-blue-400/20' 
