@@ -56,5 +56,4 @@ export interface SalesReport {
   order_count: number;
   avg_order_value: number;
   user_stats: { [userName: string]: number };
-  categoryStats: { [cat: string]: number };
 }

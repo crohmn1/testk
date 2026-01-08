@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { Role, User, Product, CartItem, Order, Customer } from './types';
 import { supabaseService } from './supabase';
 import { APP_CONFIG } from './constants';
@@ -142,6 +142,21 @@ const App: React.FC = () => {
     setCustomers(await supabaseService.getCustomers(user));
   };
 
+  // Navigasi Logic untuk Sliding Indicator
+  const dockTabs = useMemo(() => {
+    if (!user) return [];
+    const tabs = [
+      { id: 'catalog', label: 'Katalog', icon: 'fa-th-large' },
+      { id: 'history', label: 'Riwayat', icon: 'fa-history' }
+    ];
+    if (user.role === Role.ADMIN) {
+      tabs.push({ id: 'admin', label: 'Admin', icon: 'fa-cog' });
+    }
+    return tabs;
+  }, [user]);
+
+  const activeTabIndex = dockTabs.findIndex(t => t.id === view);
+
   if (loading) {
     return (
       <div className="flex flex-col items-center justify-center h-screen bg-white">
@@ -164,26 +179,15 @@ const App: React.FC = () => {
             
             {user && (
               <nav className="hidden md:flex gap-1 ml-6">
-                <button 
-                  onClick={() => setView('catalog')}
-                  className={`px-4 py-2 rounded-lg font-bold text-sm ${view === 'catalog' ? 'bg-blue-600 text-white' : 'text-gray-500'}`}
-                >
-                  Katalog
-                </button>
-                <button 
-                  onClick={() => setView('history')}
-                  className={`px-4 py-2 rounded-lg font-bold text-sm ${view === 'history' ? 'bg-blue-600 text-white' : 'text-gray-500'}`}
-                >
-                  Riwayat
-                </button>
-                {user.role === Role.ADMIN && (
+                {dockTabs.map(tab => (
                   <button 
-                    onClick={() => setView('admin')}
-                    className={`px-4 py-2 rounded-lg font-bold text-sm ${view === 'admin' ? 'bg-blue-600 text-white' : 'text-gray-500'}`}
+                    key={tab.id}
+                    onClick={() => setView(tab.id as any)}
+                    className={`px-4 py-2 rounded-lg font-bold text-sm transition-colors ${view === tab.id ? 'bg-blue-600 text-white' : 'text-gray-500 hover:text-gray-800'}`}
                   >
-                    Manajemen
+                    {tab.label}
                   </button>
-                )}
+                ))}
               </nav>
             )}
           </div>
@@ -263,57 +267,44 @@ const App: React.FC = () => {
         </div>
       </main>
 
-      {/* Floating Pill Dock Navigation */}
+      {/* RE-DESIGNED: Segmented Control Dock Navigation (iOS/Premium Style) */}
       {user && (
         <div 
-          className={`md:hidden fixed bottom-8 left-1/2 -translate-x-1/2 z-50 no-print px-4 w-auto transition-all duration-500 ease-in-out ${
+          className={`md:hidden fixed bottom-6 left-1/2 -translate-x-1/2 z-50 no-print px-4 w-full max-w-[360px] transition-all duration-500 ease-in-out ${
             isDockVisible ? 'translate-y-0 opacity-100 scale-100' : 'translate-y-24 opacity-0 scale-90'
           }`}
         >
-          <div className="bg-white/80 backdrop-blur-xl p-1.5 rounded-full flex items-center gap-1 border border-white">
-            <button 
-              onClick={() => { setView('catalog'); scrollContainerRef.current?.scrollTo(0,0); }}
-              className={`relative flex items-center justify-center h-12 rounded-full overflow-hidden ${
-                view === 'catalog' 
-                  ? 'bg-blue-600 text-white px-6 w-auto' 
-                  : 'text-blue-300/60 w-12'
-              }`}
-            >
-              <i className="fas fa-th-large text-lg shrink-0"></i>
-              <span className={`ml-2 text-[11px] font-black uppercase tracking-wider whitespace-nowrap transition-all duration-300 ${view === 'catalog' ? 'opacity-100' : 'opacity-0 w-0 absolute'}`}>
-                Katalog
-              </span>
-            </button>
+          <div className="bg-white/80 backdrop-blur-2xl p-1.5 rounded-[2.5rem] flex items-center relative border border-white shadow-[0_20px_50px_rgba(0,0,0,0.1)] h-16">
             
-            <button 
-              onClick={() => { setView('history'); scrollContainerRef.current?.scrollTo(0,0); }}
-              className={`relative flex items-center justify-center h-12 rounded-full overflow-hidden ${
-                view === 'history' 
-                  ? 'bg-blue-600 text-white px-6 w-auto' 
-                  : 'text-blue-300/60 w-12'
-              }`}
-            >
-              <i className="fas fa-history text-lg shrink-0"></i>
-              <span className={`ml-2 text-[11px] font-black uppercase tracking-wider whitespace-nowrap transition-all duration-300 ${view === 'history' ? 'opacity-100' : 'opacity-0 w-0 absolute'}`}>
-                Riwayat
-              </span>
-            </button>
-            
-            {user.role === Role.ADMIN && (
+            {/* Improved Sliding Background Indicator Logic */}
+            {dockTabs.length > 0 && (
+              <div 
+                className="absolute transition-all duration-500 ease-[cubic-bezier(0.34,1.56,0.64,1)] z-0 flex items-center justify-center p-1"
+                style={{ 
+                  width: `${100 / dockTabs.length}%`,
+                  height: '100%',
+                  left: 0,
+                  transform: `translateX(${activeTabIndex * 100}%)`
+                }}
+              >
+                <div className="w-full h-full bg-blue-600 rounded-[2rem] shadow-lg shadow-blue-200"></div>
+              </div>
+            )}
+
+            {dockTabs.map((tab) => (
               <button 
-                onClick={() => { setView('admin'); scrollContainerRef.current?.scrollTo(0,0); }}
-                className={`relative flex items-center justify-center h-12 rounded-full overflow-hidden ${
-                  view === 'admin' 
-                    ? 'bg-blue-600 text-white px-6 w-auto' 
-                    : 'text-blue-300/60 w-12'
+                key={tab.id}
+                onClick={() => { setView(tab.id as any); scrollContainerRef.current?.scrollTo(0,0); }}
+                className={`relative z-10 flex-1 flex flex-col items-center justify-center h-full transition-colors duration-500 ${
+                  view === tab.id ? 'text-white' : 'text-gray-400'
                 }`}
               >
-                <i className="fas fa-cog text-lg shrink-0"></i>
-                <span className={`ml-2 text-[11px] font-black uppercase tracking-wider whitespace-nowrap transition-all duration-300 ${view === 'admin' ? 'opacity-100' : 'opacity-0 w-0 absolute'}`}>
-                  Admin
+                <i className={`fas ${tab.icon} text-base mb-0.5`}></i>
+                <span className="text-[9px] font-black uppercase tracking-wider">
+                  {tab.label}
                 </span>
               </button>
-            )}
+            ))}
           </div>
         </div>
       )}
