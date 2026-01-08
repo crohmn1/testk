@@ -1,6 +1,6 @@
 
 import { createClient } from '@supabase/supabase-js';
-import { Product, User, Order } from './types';
+import { Product, User, Order, Customer, Role } from './types';
 import { INITIAL_PRODUCTS, INITIAL_USERS } from './constants';
 
 const SUPABASE_URL = (import.meta as any).env?.VITE_SUPABASE_URL || '';
@@ -18,7 +18,6 @@ const getLocalCache = (key: string) => {
   return saved ? JSON.parse(saved) : null;
 };
 
-// Inisialisasi data awal jika localStorage masih kosong
 const initStorage = () => {
   if (!localStorage.getItem('pos_products')) {
     updateLocalCache('pos_products', INITIAL_PRODUCTS);
@@ -28,6 +27,9 @@ const initStorage = () => {
   }
   if (!localStorage.getItem('pos_orders')) {
     updateLocalCache('pos_orders', []);
+  }
+  if (!localStorage.getItem('pos_customers')) {
+    updateLocalCache('pos_customers', []);
   }
 };
 
@@ -101,6 +103,102 @@ export const supabaseService = {
     await supabase.from('users').delete().eq('id', id);
   },
 
+  getCustomers: async (user: User): Promise<Customer[]> => {
+    let allCustomers = getLocalCache('pos_customers') || [];
+    
+    // RBAC Filter Logic
+    let filtered: Customer[] = [];
+    if (user.role === Role.ADMIN) {
+      filtered = allCustomers;
+    } else if (user.role === Role.SALES) {
+      filtered = allCustomers.filter((c: Customer) => c.created_by === user.id);
+    } else if (user.role === Role.KASIR) {
+      filtered = allCustomers.filter((c: Customer) => 
+        c.created_by_role === Role.KASIR || c.created_by_role === Role.ADMIN
+      );
+    } else {
+      filtered = [];
+    }
+
+    if (!supabase) return filtered;
+
+    try {
+      let query = supabase.from('customers').select('*');
+      if (user.role === Role.SALES) query = query.eq('created_by', user.id);
+      else if (user.role === Role.KASIR) query = query.in('created_by_role', [Role.KASIR, Role.ADMIN]);
+
+      const { data, error } = await query;
+      if (error) throw error;
+      updateLocalCache('pos_customers', data);
+      return data as Customer[];
+    } catch (err) {
+      return filtered;
+    }
+  },
+
+  saveCustomer: async (customer: Customer): Promise<void> => {
+    const customers = getLocalCache('pos_customers') || [];
+    const index = customers.findIndex((c: any) => c.id === customer.id);
+    if (index > -1) customers[index] = customer;
+    else customers.push(customer);
+    updateLocalCache('pos_customers', customers);
+
+    if (!supabase) return;
+    try {
+      await supabase.from('customers').upsert(customer);
+    } catch (e) {
+      console.error("Sync failed for saveCustomer", e);
+    }
+  },
+
+  bulkTransferCustomers: async (ids: string[], newOwnerId: string, newOwnerRole: Role): Promise<void> => {
+    const customers = getLocalCache('pos_customers') || [];
+    ids.forEach(id => {
+      const index = customers.findIndex((c: any) => c.id === id);
+      if (index > -1) {
+        customers[index].created_by = newOwnerId;
+        customers[index].created_by_role = newOwnerRole;
+      }
+    });
+    updateLocalCache('pos_customers', customers);
+
+    if (!supabase) return;
+    try {
+      const { error } = await supabase.from('customers').update({ 
+        created_by: newOwnerId, 
+        created_by_role: newOwnerRole 
+      }).in('id', ids);
+      if (error) throw error;
+    } catch (e) {
+      console.error("Sync failed for bulkTransferCustomers", e);
+    }
+  },
+
+  bulkDeleteCustomers: async (ids: string[]): Promise<void> => {
+    const customers = (getLocalCache('pos_customers') || []).filter((c: any) => !ids.includes(c.id));
+    updateLocalCache('pos_customers', customers);
+
+    if (!supabase) return;
+    try {
+      const { error } = await supabase.from('customers').delete().in('id', ids);
+      if (error) throw error;
+    } catch (e) {
+      console.error("Sync failed for bulkDeleteCustomers", e);
+    }
+  },
+
+  deleteCustomer: async (id: string): Promise<void> => {
+    const customers = (getLocalCache('pos_customers') || []).filter((c: any) => c.id !== id);
+    updateLocalCache('pos_customers', customers);
+
+    if (!supabase) return;
+    try {
+      await supabase.from('customers').delete().eq('id', id);
+    } catch (e) {
+      console.error("Sync failed for deleteCustomer", e);
+    }
+  },
+
   createOrder: async (order: Order): Promise<void> => {
     // Update stok lokal
     const prods = getLocalCache('pos_products') || [];
@@ -109,6 +207,24 @@ export const supabaseService = {
       if (pIndex > -1) prods[pIndex].stock -= item.quantity;
     });
     updateLocalCache('pos_products', prods);
+
+    // Update total belanja pelanggan saja
+    if (order.customer_id) {
+      const customers = getLocalCache('pos_customers') || [];
+      const cIndex = customers.findIndex((c: any) => c.id === order.customer_id);
+      if (cIndex > -1) {
+        customers[cIndex].total_spent += order.total_amount;
+        updateLocalCache('pos_customers', customers);
+        
+        if (supabase) {
+          try {
+            await supabase.from('customers').update({ 
+              total_spent: customers[cIndex].total_spent
+            }).eq('id', order.customer_id);
+          } catch (e) {}
+        }
+      }
+    }
 
     const orders = getLocalCache('pos_orders') || [];
     orders.unshift(order);

@@ -13,13 +13,12 @@ const Receipt: React.FC<ReceiptProps> = ({ order }) => {
     year: 'numeric'
   });
 
-  const subtotal = order.total_amount + order.discount;
-  const discountPercent = subtotal > 0 ? Math.round((order.discount / subtotal) * 100) : 0;
+  const subtotalBeforeDiscounts = order.total_amount + (order.discount || 0);
 
   return (
     <div className="text-gray-800 font-mono text-sm leading-tight p-2">
       <div className="text-center mb-6">
-        <h2 className="text-xl font-bold uppercase">NOTA</h2>
+        <h2 className="text-xl font-bold uppercase tracking-widest">NOTA SMARTPOS</h2>
       </div>
 
       <div className="border-b border-dashed py-3 space-y-1 text-xs">
@@ -36,7 +35,6 @@ const Receipt: React.FC<ReceiptProps> = ({ order }) => {
           <span>{dateStr}</span>
         </div>
         
-        {/* Buyer Info */}
         {(order.buyer_name || order.buyer_phone) && (
           <div className="mt-2 pt-2 border-t border-gray-100 border-dotted">
             {order.buyer_name && (
@@ -68,34 +66,36 @@ const Receipt: React.FC<ReceiptProps> = ({ order }) => {
             <tr key={idx}>
               <td className="py-2">
                 <p className="font-semibold">{item.name}</p>
-                <p className="text-[10px] text-gray-500">Rp {item.price.toLocaleString()}</p>
+                <p className="text-[10px] text-gray-500">@ {item.price.toLocaleString()}</p>
               </td>
               <td className="text-center py-2">{item.quantity}</td>
-              <td className="text-right py-2">Rp {(item.price * item.quantity).toLocaleString()}</td>
+              <td className="text-right py-2">{(item.price * item.quantity).toLocaleString()}</td>
             </tr>
           ))}
         </tbody>
       </table>
 
-      <div className="border-t border-dashed pt-3 space-y-1">
+      <div className="border-t border-dashed pt-3 space-y-1 text-xs">
         <div className="flex justify-between">
           <span>Subtotal</span>
-          <span>Rp {subtotal.toLocaleString()}</span>
+          <span>Rp {subtotalBeforeDiscounts.toLocaleString()}</span>
         </div>
-        {order.discount > 0 && (
-          <div className="flex justify-between text-red-600">
-            <span>Diskon ({discountPercent}%)</span>
+        
+        {(order.discount && order.discount > 0) && (
+          <div className="flex justify-between text-red-500 italic">
+            <span>Diskon</span>
             <span>- Rp {order.discount.toLocaleString()}</span>
           </div>
         )}
-        <div className="flex justify-between font-bold text-lg pt-2">
+
+        <div className="flex justify-between font-bold text-lg pt-3 border-t border-gray-100 mt-2">
           <span>TOTAL</span>
           <span>Rp {order.total_amount.toLocaleString()}</span>
         </div>
       </div>
 
       <div className="text-center mt-8 pt-4 border-t border-gray-100">
-        <p className="text-[10px] text-gray-500">Terima kasih telah berbelanja!</p>
+        <p className="text-[9px] text-gray-400 uppercase font-black tracking-widest">Terima kasih</p>
       </div>
     </div>
   );

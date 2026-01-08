@@ -1,30 +1,53 @@
 
-import React, { useState } from 'react';
-import { CartItem } from '../types';
+import React, { useState, useMemo } from 'react';
+import { CartItem, Customer, User } from '../types';
+import CustomerForm from './CustomerForm';
 
 interface CartProps {
   items: CartItem[];
   onUpdateQuantity: (id: string, delta: number) => void;
   onSetQuantity: (id: string, value: number) => void;
   onRemove: (id: string) => void;
-  onCheckout: (discount: number, buyerName?: string, buyerPhone?: string) => void;
+  onCheckout: (discount: number, buyerName?: string, buyerPhone?: string, customerId?: string) => void;
   onReset: () => void;
+  customers: Customer[];
+  onSaveCustomer: (c: Customer) => void;
+  currentUser: User;
 }
 
-const Cart: React.FC<CartProps> = ({ items, onUpdateQuantity, onSetQuantity, onRemove, onCheckout, onReset }) => {
+const Cart: React.FC<CartProps> = ({ items, onUpdateQuantity, onSetQuantity, onRemove, onCheckout, onReset, customers, onSaveCustomer, currentUser }) => {
   const [discountPercent, setDiscountPercent] = useState(0);
   const [buyerName, setBuyerName] = useState('');
   const [buyerPhone, setBuyerPhone] = useState('');
+  const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
   const [showBuyerForm, setShowBuyerForm] = useState(false);
-  
+  const [customerSearch, setCustomerSearch] = useState('');
+  const [isAddingCustomer, setIsAddingCustomer] = useState(false);
+
   const subtotal = items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
   const discountAmount = (subtotal * discountPercent) / 100;
   const total = Math.max(0, subtotal - discountAmount);
 
+  const filteredCustomers = useMemo(() => {
+    if (!customerSearch) return [];
+    return customers.filter(c => 
+      c.name.toLowerCase().includes(customerSearch.toLowerCase()) || 
+      c.phone.includes(customerSearch)
+    ).slice(0, 5);
+  }, [customers, customerSearch]);
+
+  const handleSelectCustomer = (c: Customer) => {
+    setSelectedCustomer(c);
+    setBuyerName(c.name);
+    setBuyerPhone(c.phone);
+    setCustomerSearch('');
+  };
+
   const handleCheckout = () => {
-    onCheckout(discountAmount, buyerName, buyerPhone);
+    onCheckout(discountAmount, buyerName, buyerPhone, selectedCustomer?.id);
     setBuyerName('');
     setBuyerPhone('');
+    setSelectedCustomer(null);
     setDiscountPercent(0);
     setShowBuyerForm(false);
   };
@@ -62,81 +85,80 @@ const Cart: React.FC<CartProps> = ({ items, onUpdateQuantity, onSetQuantity, onR
                 </div>
                 
                 <div className="flex items-center gap-0.5 bg-gray-50 rounded-xl p-0.5 h-fit shrink-0 border border-gray-100 ml-auto">
-                  <button 
-                    onClick={() => onUpdateQuantity(item.id, -1)} 
-                    className="w-7 h-7 flex items-center justify-center rounded-lg text-gray-400"
-                  >
+                  <button onClick={() => onUpdateQuantity(item.id, -1)} className="w-7 h-7 flex items-center justify-center rounded-lg text-gray-400">
                     <i className="fas fa-minus text-[8px]"></i>
                   </button>
-                  
-                  <input 
-                    type="number"
-                    inputMode="numeric"
-                    className="w-8 bg-transparent text-center font-black text-xs md:text-sm focus:outline-none text-gray-700"
-                    value={item.quantity}
-                    onChange={(e) => {
-                      const val = parseInt(e.target.value);
-                      if (!isNaN(val) && val >= 0) {
-                        onSetQuantity(item.id, val);
-                      } else if (e.target.value === '') {
-                        onSetQuantity(item.id, 0);
-                      }
-                    }}
-                    onBlur={(e) => {
-                      if (e.target.value === '' || parseInt(e.target.value) === 0) {
-                        onSetQuantity(item.id, 1);
-                      }
-                    }}
-                  />
-                  
-                  <button 
-                    onClick={() => onUpdateQuantity(item.id, 1)} 
-                    className="w-7 h-7 flex items-center justify-center rounded-lg text-gray-400"
-                  >
+                  <input type="number" inputMode="numeric" className="w-8 bg-transparent text-center font-black text-xs md:text-sm focus:outline-none text-gray-700" value={item.quantity} onChange={(e) => { const val = parseInt(e.target.value); if (!isNaN(val) && val >= 0) onSetQuantity(item.id, val); }} />
+                  <button onClick={() => onUpdateQuantity(item.id, 1)} className="w-7 h-7 flex items-center justify-center rounded-lg text-gray-400">
                     <i className="fas fa-plus text-[8px]"></i>
                   </button>
                 </div>
 
-                <button 
-                  onClick={() => onRemove(item.id)} 
-                  className="text-gray-300 pl-1 pr-0 shrink-0"
-                  title="Hapus"
-                >
-                  <i className="fas fa-times-circle text-base"></i>
-                </button>
+                <button onClick={() => onRemove(item.id)} className="text-gray-300 pl-1 pr-0 shrink-0"><i className="fas fa-times-circle text-base"></i></button>
               </div>
             ))}
 
             <div className="mt-4 pt-4 border-t border-gray-100">
-              <button 
-                onClick={() => setShowBuyerForm(!showBuyerForm)}
-                className="w-full flex items-center justify-between text-[10px] font-black uppercase tracking-widest text-blue-600 bg-blue-50 px-3 py-2 rounded-lg"
-              >
-                <span><i className="fas fa-user-tag mr-2"></i> {showBuyerForm ? 'Sembunyikan Data Pembeli' : 'Tambah Data Pembeli'}</span>
-                <i className={`fas fa-chevron-${showBuyerForm ? 'up' : 'down'}`}></i>
-              </button>
-              
-              {showBuyerForm && (
-                <div className="space-y-3 mt-3 p-3 bg-gray-50 rounded-xl border border-gray-100 animate-in slide-in-from-top-2 duration-200">
+              {selectedCustomer ? (
+                <div className="bg-amber-50 border border-amber-100 p-3 rounded-xl flex items-center justify-between">
                   <div>
-                    <label className="block text-[9px] font-black text-gray-400 uppercase mb-1">Nama Pembeli</label>
-                    <input 
-                      type="text"
-                      placeholder="Masukkan nama..."
-                      className="w-full bg-white border border-gray-200 px-3 py-2 rounded-lg text-xs font-bold outline-none"
-                      value={buyerName}
-                      onChange={(e) => setBuyerName(e.target.value)}
-                    />
+                    <p className="text-[9px] font-black text-amber-600 uppercase tracking-widest">Member Terpilih</p>
+                    <p className="text-sm font-black text-amber-900">{selectedCustomer.name}</p>
+                    <p className="text-[10px] text-amber-700">HP: {selectedCustomer.phone}</p>
+                  </div>
+                  <button onClick={() => { setSelectedCustomer(null); setBuyerName(''); setBuyerPhone(''); }} className="text-amber-400 hover:text-amber-600">
+                    <i className="fas fa-times-circle"></i>
+                  </button>
+                </div>
+              ) : (
+                <button 
+                  onClick={() => setShowBuyerForm(!showBuyerForm)}
+                  className="w-full flex items-center justify-between text-[10px] font-black uppercase tracking-widest text-blue-600 bg-blue-50 px-3 py-2 rounded-lg"
+                >
+                  <span><i className="fas fa-user-tag mr-2"></i> {showBuyerForm ? 'Sembunyikan Data Pembeli' : 'Tambah Data Pembeli'}</span>
+                  <i className={`fas fa-chevron-${showBuyerForm ? 'up' : 'down'}`}></i>
+                </button>
+              )}
+              
+              {showBuyerForm && !selectedCustomer && (
+                <div className="space-y-3 mt-3 p-3 bg-gray-50 rounded-xl border border-gray-100 animate-in slide-in-from-top-2 duration-200">
+                  <div className="relative">
+                    <label className="block text-[9px] font-black text-gray-400 uppercase mb-1">Cari / Input Member</label>
+                    <div className="flex gap-2">
+                       <input 
+                        type="text" 
+                        placeholder="Nama atau HP..." 
+                        className="flex-1 bg-white border border-gray-200 px-3 py-2 rounded-lg text-xs font-bold outline-none" 
+                        value={customerSearch} 
+                        onChange={(e) => { setCustomerSearch(e.target.value); setBuyerName(e.target.value); }} 
+                      />
+                      <button 
+                        onClick={() => setIsAddingCustomer(true)}
+                        className="bg-emerald-50 text-emerald-600 px-3 py-2 rounded-lg text-xs font-black"
+                        title="Daftar Member Baru"
+                      >
+                        <i className="fas fa-plus"></i>
+                      </button>
+                    </div>
+
+                    {filteredCustomers.length > 0 && (
+                      <div className="absolute left-0 right-0 top-full mt-1 bg-white border border-gray-200 rounded-xl shadow-xl z-20 overflow-hidden divide-y">
+                        {filteredCustomers.map(c => (
+                          <button 
+                            key={c.id} 
+                            onClick={() => handleSelectCustomer(c)}
+                            className="w-full text-left px-4 py-3 hover:bg-blue-50 transition"
+                          >
+                            <p className="text-xs font-black text-gray-800">{c.name}</p>
+                            <p className="text-[10px] text-gray-400">{c.phone}</p>
+                          </button>
+                        ))}
+                      </div>
+                    )}
                   </div>
                   <div>
                     <label className="block text-[9px] font-black text-gray-400 uppercase mb-1">Nomor HP</label>
-                    <input 
-                      type="tel"
-                      placeholder="0812..."
-                      className="w-full bg-white border border-gray-200 px-3 py-2 rounded-lg text-xs font-bold outline-none"
-                      value={buyerPhone}
-                      onChange={(e) => setBuyerPhone(e.target.value)}
-                    />
+                    <input type="tel" placeholder="0812..." className="w-full bg-white border border-gray-200 px-3 py-2 rounded-lg text-xs font-bold outline-none" value={buyerPhone} onChange={(e) => setBuyerPhone(e.target.value)} />
                   </div>
                 </div>
               )}
@@ -153,35 +175,18 @@ const Cart: React.FC<CartProps> = ({ items, onUpdateQuantity, onSetQuantity, onR
           </div>
           
           <div className="flex items-center justify-between gap-4">
-            <span className="text-[10px] font-bold uppercase tracking-wider text-gray-400">Potongan/Diskon (%)</span>
+            <span className="text-[10px] font-bold uppercase tracking-wider text-gray-400">Potongan Manual (%)</span>
             <div className="relative w-24">
-              <input 
-                type="number" 
-                inputMode="numeric"
-                placeholder="0"
-                max="100"
-                min="0"
-                className="w-full px-3 py-1.5 bg-gray-50 border border-gray-100 rounded-lg text-right text-xs font-black text-red-500 focus:outline-none pr-7"
-                value={discountPercent || ''}
-                onChange={(e) => {
-                  const val = Number(e.target.value);
-                  if (val >= 0 && val <= 100) setDiscountPercent(val);
-                }}
-              />
+              <input type="number" inputMode="numeric" placeholder="0" max="100" min="0" className="w-full px-3 py-1.5 bg-gray-50 border border-gray-100 rounded-lg text-right text-xs font-black text-red-500 focus:outline-none pr-7" value={discountPercent || ''} onChange={(e) => { const val = Number(e.target.value); if (val >= 0 && val <= 100) setDiscountPercent(val); }} />
               <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-black text-red-400 pointer-events-none">%</span>
             </div>
           </div>
-
-          {discountAmount > 0 && (
-            <div className="flex justify-between text-red-400 text-[10px] font-medium italic">
-              <span>Nilai Diskon</span>
-              <span>- Rp {discountAmount.toLocaleString()}</span>
-            </div>
-          )}
         </div>
 
         <div className="pt-3 border-t border-dashed border-gray-200 flex justify-between items-center">
-          <span className="font-black text-gray-800 text-sm uppercase tracking-tighter">Total Bayar</span>
+          <div>
+            <span className="font-black text-gray-800 text-sm uppercase tracking-tighter block">Total Bayar</span>
+          </div>
           <span className="text-2xl font-black text-blue-700">Rp {total.toLocaleString()}</span>
         </div>
 
@@ -194,6 +199,24 @@ const Cart: React.FC<CartProps> = ({ items, onUpdateQuantity, onSetQuantity, onR
           <span>SELESAI & CETAK</span>
         </button>
       </div>
+
+      {isAddingCustomer && (
+        <div className="fixed inset-0 z-[100] bg-black/60 flex items-center justify-center p-4 backdrop-blur-[2px]">
+          <div className="bg-white rounded-[2rem] max-w-md w-full p-8 animate-in fade-in zoom-in duration-300 shadow-2xl">
+             <CustomerForm 
+              customer={null} 
+              onClose={() => setIsAddingCustomer(false)} 
+              onSave={(c) => { 
+                c.created_by = currentUser.id;
+                c.created_by_role = currentUser.role;
+                onSaveCustomer(c); 
+                handleSelectCustomer(c);
+                setIsAddingCustomer(false); 
+              }} 
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 };

@@ -26,6 +26,17 @@ export interface CartItem extends Pick<Product, 'id' | 'name' | 'price'> {
   quantity: number;
 }
 
+// Metadata for RBAC support in Customer management (points removed)
+export interface Customer {
+  id: string;
+  name: string;
+  phone: string;
+  total_spent: number;
+  created_at: string;
+  created_by: string;      // ID User pembuat
+  created_by_role: Role;   // Role pembuat
+}
+
 export interface Order {
   id: string;
   receipt_number: string;
@@ -37,6 +48,7 @@ export interface Order {
   created_at: string;
   buyer_name?: string;
   buyer_phone?: string;
+  customer_id?: string; // Link to customer table if member
 }
 
 export interface SalesReport {
@@ -44,4 +56,5 @@ export interface SalesReport {
   order_count: number;
   avg_order_value: number;
   user_stats: { [userName: string]: number };
+  categoryStats: { [cat: string]: number };
 }

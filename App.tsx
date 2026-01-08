@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect, useRef } from 'react';
-import { Role, User, Product, CartItem, Order } from './types';
+import { Role, User, Product, CartItem, Order, Customer } from './types';
 import { supabaseService } from './supabase';
 import { APP_CONFIG } from './constants';
 import PinLogin from './components/PinLogin';
@@ -14,12 +14,12 @@ const App: React.FC = () => {
   const [user, setUser] = useState<User | null>(null);
   const [view, setView] = useState<'catalog' | 'admin' | 'history'>('catalog');
   const [products, setProducts] = useState<Product[]>([]);
+  const [customers, setCustomers] = useState<Customer[]>([]);
   const [cart, setCart] = useState<CartItem[]>([]);
   const [orders, setOrders] = useState<Order[]>([]);
   const [showReceipt, setShowReceipt] = useState<Order | null>(null);
   const [loading, setLoading] = useState(true);
   
-  // States for Smart Auto-Hide
   const [isDockVisible, setIsDockVisible] = useState(true);
   const lastScrollY = useRef(0);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
@@ -38,23 +38,21 @@ const App: React.FC = () => {
     loadData();
   }, []);
 
-  // Handle Smart Auto-Hide Logic
+  useEffect(() => {
+    if (user) {
+      supabaseService.getCustomers(user).then(setCustomers);
+    } else {
+      setCustomers([]);
+    }
+  }, [user]);
+
   const handleScroll = () => {
     if (!scrollContainerRef.current) return;
-    
     const currentScrollY = scrollContainerRef.current.scrollTop;
     const scrollDiff = currentScrollY - lastScrollY.current;
-
-    if (currentScrollY < 10) {
-      setIsDockVisible(true);
-    } 
-    else if (scrollDiff > 10 && isDockVisible) {
-      setIsDockVisible(false);
-    } 
-    else if (scrollDiff < -10 && !isDockVisible) {
-      setIsDockVisible(true);
-    }
-
+    if (currentScrollY < 10) setIsDockVisible(true);
+    else if (scrollDiff > 10 && isDockVisible) setIsDockVisible(false);
+    else if (scrollDiff < -10 && !isDockVisible) setIsDockVisible(true);
     lastScrollY.current = currentScrollY;
   };
 
@@ -100,7 +98,7 @@ const App: React.FC = () => {
     setCart(prev => prev.filter(item => item.id !== id));
   };
 
-  const handleCheckout = async (discount: number = 0, buyerName?: string, buyerPhone?: string) => {
+  const handleCheckout = async (discount: number = 0, buyerName?: string, buyerPhone?: string, customerId?: string) => {
     if (!user || cart.length === 0) return;
 
     const total = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0) - discount;
@@ -122,14 +120,26 @@ const App: React.FC = () => {
       items: [...cart],
       created_at: new Date().toISOString(),
       buyer_name: buyerName || undefined,
-      buyer_phone: buyerPhone || undefined
+      buyer_phone: buyerPhone || undefined,
+      customer_id: customerId
     };
 
     await supabaseService.createOrder(newOrder);
     setOrders(prev => [newOrder, ...prev]);
+    
+    // Refresh products for stock
     setProducts(await supabaseService.getProducts());
+    // Refresh customers for points
+    setCustomers(await supabaseService.getCustomers(user));
+
     setShowReceipt(newOrder);
     setCart([]);
+  };
+
+  const handleSaveCustomer = async (customer: Customer) => {
+    if (!user) return;
+    await supabaseService.saveCustomer(customer);
+    setCustomers(await supabaseService.getCustomers(user));
   };
 
   if (loading) {
@@ -225,6 +235,9 @@ const App: React.FC = () => {
                     onRemove={removeFromCart} 
                     onCheckout={handleCheckout}
                     onReset={() => setCart([])}
+                    customers={customers}
+                    onSaveCustomer={handleSaveCustomer}
+                    currentUser={user!}
                   />
                 </div>
               )}
@@ -236,6 +249,9 @@ const App: React.FC = () => {
                 products={products} 
                 onProductsChange={async () => setProducts(await supabaseService.getProducts())}
                 orders={orders}
+                customers={customers}
+                currentUser={user}
+                onCustomersChange={async () => setCustomers(await supabaseService.getCustomers(user))}
               />
             </div>
           )}
@@ -302,9 +318,8 @@ const App: React.FC = () => {
         </div>
       )}
 
-      {/* Login Modal */}
       <dialog id="login-modal" className="modal p-0 rounded-[2rem] backdrop:bg-black/70 no-print overflow-hidden">
-        <div className="w-full max-w-[350px] landscape:max-w-2xl md:max-w-4xl lg:max-w-5xl h-auto overflow-y-auto landscape:max-h-screen">
+        <div className="w-full max-w-[360px] h-auto overflow-y-auto max-h-[90vh]">
           <PinLogin onLogin={handleLogin} onCancel={() => (document.getElementById('login-modal') as any).close()} />
         </div>
       </dialog>
